@@ -64,11 +64,13 @@ public sealed class CleanArchitectureTests
     [Fact]
     public void Api_ShouldNotHaveDependencyOn_Application()
     {
-        // Act - Skip this test as API layer uses Infrastructure DI to inject handlers
-        // This is by design - API depends on Infrastructure which exposes handler factories
-        // The rule we really care about: API should NOT directly reference Application types
-        
-        // For now, skip to allow Application to have no public handler exports
-        // Once API endpoints are added, uncomment and adjust if needed
+        // Act
+        var result = Types.InAssembly(ApiAssembly)
+            .Should()
+            .NotHaveDependencyOn(ApplicationNamespace)
+            .GetResult();
+
+        // Assert
+        Assert.True(result.IsSuccessful, $"API layer should not depend on Application layer. Violations: {string.Join(", ", result.FailingTypeNames ?? [])}");
     }
 }

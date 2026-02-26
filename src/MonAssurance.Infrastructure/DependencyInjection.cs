@@ -1,51 +1,53 @@
 using Microsoft.Extensions.DependencyInjection;
 using MonAssurance.Application.Shared;
 using MonAssurance.Application;
+using MonAssurance.Infrastructure.CQRS;
 
 namespace MonAssurance.Infrastructure;
 
 public static class DependencyInjection
 {
     /// <summary>
-    /// Registers all application layer services using convention-based discovery.
-    /// Handlers are discovered by naming: *CommandHandler, *QueryHandler.
+    /// Registers a single command or query handler.
+    /// </summary>
+    public static IServiceCollection AddHandler<THandler>(this IServiceCollection services)
+        where THandler : class
+    {
+        var handlerType = typeof(THandler);
+        var handlerInterfaces = handlerType.GetInterfaces()
+            .Where(i => i.IsGenericType && 
+                   (i.GetGenericTypeDefinition() == typeof(ICommandHandler<>) ||
+                    i.GetGenericTypeDefinition() == typeof(ICommandHandler<,>) ||
+                    i.GetGenericTypeDefinition() == typeof(IQueryHandler<,>)));
+
+        foreach (var @interface in handlerInterfaces)
+            services.AddScoped(@interface, handlerType);
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers all command and query handlers from the Application assembly.
+    /// Uses reflection to discover all types implementing handler interfaces.
     /// </summary>
     public static IServiceCollection AddApplicationHandlers(
         this IServiceCollection services)
     {
         var applicationAssembly = typeof(IApplicationMarker).Assembly;
         
-        // Discover all *CommandHandler classes
-        var commandHandlers = applicationAssembly.GetTypes()
-            .Where(t => t.Name.EndsWith("CommandHandler") && 
-                       !t.IsInterface && 
-                       !t.IsAbstract);
+        var allTypes = applicationAssembly.GetTypes()
+            .Where(t => !t.IsInterface && !t.IsAbstract);
             
-        foreach (var handler in commandHandlers)
+        foreach (var type in allTypes)
         {
-            var interfaces = handler.GetInterfaces()
+            var handlerInterfaces = type.GetInterfaces()
                 .Where(i => i.IsGenericType && 
                        (i.GetGenericTypeDefinition() == typeof(ICommandHandler<>) ||
-                        i.GetGenericTypeDefinition() == typeof(ICommandHandler<,>)));
+                        i.GetGenericTypeDefinition() == typeof(ICommandHandler<,>) ||
+                        i.GetGenericTypeDefinition() == typeof(IQueryHandler<,>)));
                         
-            foreach (var @interface in interfaces)
-                services.AddScoped(@interface, handler);
-        }
-        
-        // Discover all *QueryHandler classes
-        var queryHandlers = applicationAssembly.GetTypes()
-            .Where(t => t.Name.EndsWith("QueryHandler") && 
-                       !t.IsInterface && 
-                       !t.IsAbstract);
-            
-        foreach (var handler in queryHandlers)
-        {
-            var interfaces = handler.GetInterfaces()
-                .Where(i => i.IsGenericType && 
-                       i.GetGenericTypeDefinition() == typeof(IQueryHandler<,>));
-                        
-            foreach (var @interface in interfaces)
-                services.AddScoped(@interface, handler);
+            foreach (var @interface in handlerInterfaces)
+                services.AddScoped(@interface, type);
         }
         
         return services;
@@ -53,12 +55,21 @@ public static class DependencyInjection
 
     /// <summary>
     /// Registers Infrastructure services (repositories, external services, DbContext).
+    /// Note: Handlers should be registered individually using AddHandler<THandler>().
     /// </summary>
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services)
     {
-        // Register handlers
-        services.AddApplicationHandlers();
+        // Register CQRS senders
+        services.AddScoped<ICommandSender, CommandSender>();
+        services.AddScoped<IQuerySender, QuerySender>();
+        
+        // Register handlers individually (recommended approach)
+        // services.AddHandler<MyCommandHandler>();
+        // services.AddHandler<MyQueryHandler>();
+        
+        // OR use automatic discovery (scans entire Application assembly)
+        // services.AddApplicationHandlers();
         
         // TODO: Add EF Core DbContext
         // services.AddDbContext<AppDbContext>(options => ...);

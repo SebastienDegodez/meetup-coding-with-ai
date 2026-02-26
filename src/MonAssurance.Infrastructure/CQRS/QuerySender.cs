@@ -1,0 +1,23 @@
+using Microsoft.Extensions.DependencyInjection;
+using MonAssurance.Application.Shared;
+
+namespace MonAssurance.Infrastructure.CQRS;
+
+/// <summary>
+/// Default implementation of query sender using DI to resolve handlers.
+/// </summary>
+public sealed class QuerySender : IQuerySender
+{
+    private readonly IServiceProvider _serviceProvider;
+
+    public QuerySender(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+    }
+
+    public async Task<TResult> SendAsync<TQuery, TResult>(TQuery query, CancellationToken cancellationToken = default)
+    {
+        var handler = _serviceProvider.GetRequiredService<IQueryHandler<TQuery, TResult>>();
+        return await handler.HandleAsync(query, cancellationToken);
+    }
+}
