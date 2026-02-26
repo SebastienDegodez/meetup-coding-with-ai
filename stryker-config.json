@@ -18,7 +18,6 @@
       "Bitwise"
     ],
     "log-level": "info",
-    "timeout": 5000,
     "timeout-ms": 5000,
     "concurrency": 4,
     "since": {
