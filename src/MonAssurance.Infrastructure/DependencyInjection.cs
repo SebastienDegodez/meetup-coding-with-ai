@@ -55,27 +55,22 @@ public static class DependencyInjection
 
     /// <summary>
     /// Registers Infrastructure services (repositories, external services, DbContext).
-    /// Note: Handlers should be registered individually using AddHandler<THandler>().
     /// </summary>
+    /// <remarks>
+    /// Handler Registration Examples:
+    /// - Explicit: services.AddHandler&lt;MyCommandHandler&gt;();
+    /// - Bulk: services.AddApplicationHandlers();
+    /// 
+    /// Future Infrastructure Services:
+    /// - EF Core DbContext: services.AddDbContext&lt;AppDbContext&gt;(options => ...);
+    /// - Repositories: services.AddScoped&lt;IOrderRepository, OrderRepository&gt;();
+    /// </remarks>
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services)
     {
         // Register CQRS senders
         services.AddScoped<ICommandSender, CommandSender>();
         services.AddScoped<IQuerySender, QuerySender>();
-        
-        // Register handlers individually (recommended approach)
-        // services.AddHandler<MyCommandHandler>();
-        // services.AddHandler<MyQueryHandler>();
-        
-        // OR use automatic discovery (scans entire Application assembly)
-        // services.AddApplicationHandlers();
-        
-        // TODO: Add EF Core DbContext
-        // services.AddDbContext<AppDbContext>(options => ...);
-        
-        // TODO: Add repositories
-        // services.AddScoped<IOrderRepository, OrderRepository>();
         
         return services;
     }
