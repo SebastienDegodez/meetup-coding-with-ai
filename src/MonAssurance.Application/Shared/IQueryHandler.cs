@@ -1,4 +1,4 @@
-namespace MonAssurance.Application._Contracts;
+namespace MonAssurance.Application.Shared;
 
 /// <summary>
 /// Handler for queries (read operations).

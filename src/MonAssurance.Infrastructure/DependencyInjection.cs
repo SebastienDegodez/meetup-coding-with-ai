@@ -1,5 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using MonAssurance.Application._Contracts;
+using MonAssurance.Application.Shared;
 using MonAssurance.Application;
 
 namespace MonAssurance.Infrastructure;
