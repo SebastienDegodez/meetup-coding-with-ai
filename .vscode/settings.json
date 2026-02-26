@@ -3,14 +3,17 @@
     "chat.experimental.useSkillAdherencePrompt": true,
     "chat.agentSkillsLocations": {
         ".github/skills": true,
-        "~/.copilot/installed-plugins/superpowers-marketplace/superpowers/skills": true
+        "~/.copilot/installed-plugins/superpowers-marketplace/superpowers/skills": true,
+        "~/.copilot/installed-plugins/csharp-clean-architecture-plugin/skills": true
     },
     "chat.agentFilesLocations": {
         ".github/agents": true,
-        "~/.copilot/installed-plugins/superpowers-marketplace/superpowers/agents": true
+        "~/.copilot/installed-plugins/superpowers-marketplace/superpowers/agents": true,
+        "~/.copilot/installed-plugins/csharp-clean-architecture-plugin/agents": true
     },
     "chat.hookFilesLocations": {
         ".github/hooks": true,
-        "~/.copilot/installed-plugins/superpowers-marketplace/superpowers/hooks": true
+        "~/.copilot/installed-plugins/superpowers-marketplace/superpowers/hooks": true,
+        "~/.copilot/installed-plugins/csharp-clean-architecture-plugin/hooks": true
     }
 }
