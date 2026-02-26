@@ -1,5 +1,3 @@
-using MonAssurance.Application.Shared;
-
 namespace MonAssurance.IntegrationTests.Fakes;
 
 public sealed class TestCommand
