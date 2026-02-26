@@ -17,6 +17,8 @@ public sealed class QuerySender : IQuerySender
 
     public async Task<TResult> SendAsync<TQuery, TResult>(TQuery query, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(query);
+        
         var handler = _serviceProvider.GetRequiredService<IQueryHandler<TQuery, TResult>>();
         return await handler.HandleAsync(query, cancellationToken);
     }

@@ -17,7 +17,7 @@ public sealed class CqrsIntegrationTests
         services.AddInfrastructure();
         services.AddHandler<TestCommandHandler>();
         
-        var provider = services.BuildServiceProvider();
+        using var provider = services.BuildServiceProvider();
         var sender = provider.GetRequiredService<ICommandSender>();
         var command = new TestCommand { Value = "test" };
         
@@ -38,7 +38,7 @@ public sealed class CqrsIntegrationTests
         services.AddInfrastructure();
         services.AddHandler<TestQueryHandler>();
         
-        var provider = services.BuildServiceProvider();
+        using var provider = services.BuildServiceProvider();
         var sender = provider.GetRequiredService<IQuerySender>();
         var query = new TestQuery { Id = 42 };
         
@@ -62,7 +62,7 @@ public sealed class CqrsIntegrationTests
         var mockHandler = A.Fake<ICommandHandler<TestCommand>>();
         services.AddScoped<ICommandHandler<TestCommand>>(_ => mockHandler);
         
-        var provider = services.BuildServiceProvider();
+        using var provider = services.BuildServiceProvider();
         var sender = provider.GetRequiredService<ICommandSender>();
         var command = new TestCommand { Value = "mocked" };
         
@@ -82,7 +82,7 @@ public sealed class CqrsIntegrationTests
         services.AddInfrastructure();
         services.AddHandler<TestCommandHandler>();
         
-        var provider = services.BuildServiceProvider();
+        using var provider = services.BuildServiceProvider();
         
         // Act - Create two scopes and send commands
         ICommandHandler<TestCommand> handler1;
