@@ -1,0 +1,103 @@
+name: CI - Build, Test & Code Quality
+
+on:
+  push:
+    branches: [ main, feature/* ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test-quality:
+    name: Build, Test & Analyze Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Install SonarCloud scanner
+      run: dotnet tool install --global dotnet-sonarscanner
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Begin SonarCloud scan
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: |
+        dotnet sonarscanner begin \
+          /k:"SebastienDegodez_meetup-coding-with-ai" \
+          /o:"sebastiendegodez" \
+          /d:sonar.host.url="https://sonarcloud.io" \
+          /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
+          /d:sonar.cs.opencover.reportsPaths="**/coverage.xml" \
+          /d:sonar.exclusions="**/bin/**,**/obj/**,**/*.g.cs" \
+          /d:sonar.coverage.exclusions="**/*Tests/**,**/*Marker*.cs"
+
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Run Unit Tests
+      run: dotnet test tests/MonAssurance.UnitTests/MonAssurance.UnitTests.csproj --configuration Release --no-build --logger "trx;LogFileName=unit-tests.trx"
+
+    - name: Run Integration Tests
+      run: dotnet test tests/MonAssurance.IntegrationTests/MonAssurance.IntegrationTests.csproj --configuration Release --no-build --logger "trx;LogFileName=integration-tests.trx" /p:CollectCoverage=true /p:CoverageFormat=opencover /p:CoverageFileName=coverage.xml /p:Exclude="[*Tests]*"
+
+    - name: Detect changed files
+      if: github.event_name == 'pull_request'
+      id: diff
+      run: |
+        git diff --name-only ${{ github.event.pull_request.base.sha }}..HEAD -- 'src/**/*.cs' > changed-files.txt
+        echo "files=$(cat changed-files.txt | tr '\n' ',')" >> $GITHUB_OUTPUT
+        echo "Changed files:"
+        cat changed-files.txt
+
+    - name: Install Stryker Mutator
+      if: github.event_name == 'pull_request'
+      run: dotnet tool install --global dotnet-stryker
+
+    - name: Run Stryker Mutation Tests
+      if: github.event_name == 'pull_request' && hashFiles('changed-files.txt') != ''
+      run: |
+        cd src
+        dotnet stryker \
+          --mutate-into-static-control-flow \
+          --disable-mix \
+          --reporters "html" \
+          --output-path "../stryker-mutation-report"
+      continue-on-error: true
+
+    - name: Upload Stryker report
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: stryker-mutation-report
+        path: stryker-mutation-report/
+
+    - name: End SonarCloud scan
+      if: always()
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: '**/TestResults/*.trx'
+
+    - name: Upload coverage report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: '**/coverage.xml'
