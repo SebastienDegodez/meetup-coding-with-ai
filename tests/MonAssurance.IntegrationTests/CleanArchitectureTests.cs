@@ -14,7 +14,7 @@ public sealed class CleanArchitectureTests
     private static readonly Assembly DomainAssembly = typeof(MonAssurance.Domain.IDomainMarker).Assembly;
     private static readonly Assembly ApplicationAssembly = typeof(MonAssurance.Application.IApplicationMarker).Assembly;
     private static readonly Assembly InfrastructureAssembly = typeof(MonAssurance.Infrastructure.DependencyInjection).Assembly;
-    private static readonly Assembly ApiAssembly = typeof(MonAssurance.Api.ApiMarker).Assembly;
+    private static readonly Assembly ApiAssembly = typeof(Program).Assembly;
 
     [Fact]
     public void Domain_ShouldNotHaveDependencyOn_OtherLayers()
