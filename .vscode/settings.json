@@ -3,6 +3,7 @@
     "chat.experimental.useSkillAdherencePrompt": true,
     "chat.agentSkillsLocations": {
         ".github/skills": true,
+        ".github/skills-ln": true,
         "~/.copilot/installed-plugins/superpowers-marketplace/superpowers/skills": true,
         "~/.copilot/installed-plugins/csharp-clean-architecture-plugin/skills": true
     },
