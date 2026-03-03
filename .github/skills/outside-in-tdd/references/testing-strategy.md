@@ -2,75 +2,105 @@
 
 ## Philosophy
 
-This testing strategy follows Martin Fowler's **sociable testing** approach:
+This testing strategy follows Martin Fowler's **sociable testing** approach (see https://martinfowler.com/bliki/UnitTest.html):
 
 - **Sociable tests** use real collaborators from within the same layer or below
 - **Solitary tests** (with mocks) are used only for external dependencies
 
-## What to Test Where
+## Core Principles
 
-### Application Layer Tests (primary focus)
-- Test use cases (Command/Query handlers) with real Domain objects
-- Mock only Infrastructure dependencies (repositories, external services)
-- Validate the entire business flow including Domain logic
-- Located in: `tests/[Project].UnitTests/Application/`
+### What to Test Where
 
-### Domain Layer Tests (when needed)
-- Test **domain services** (policies, specifications, calculators) in isolation
-- Aggregates, value objects, and entities are **not** tested directly — they are exercised through the domain service or through Application tests
-- Most Domain logic is already covered through Application tests
-- Located in: `tests/[Project].UnitTests/Domain/`
+1. **Application Layer Tests** (primary focus)
+   - Test use cases (Commands/Queries handlers) with real Domain objects
+   - Mock only Infrastructure dependencies (repositories, external services)
+   - These tests validate the entire business flow including Domain logic
+   - Located in: `tests/[Project].UnitTests/Application/`
 
-### Integration Tests (full stack)
-- Test API endpoints with real infrastructure (Testcontainers)
-- Located in: `tests/[Project].IntegrationTests/`
+2. **Domain Layer Tests** (minimal, only when necessary)
+   - Test complex domain logic that needs isolated validation
+   - Test specifications, complex calculations, or critical invariants
+   - Most Domain logic is tested through Application tests
+   - Located in: `tests/[Project].UnitTests/Domain/`
 
-## When Application vs Domain Tests
-
-| Signal | Route to |
-|---|---|
-| Orchestration (load/save/publish/map) | Application test |
-| Complex business rules with edge-case matrices | Domain test (on domain service) |
-| Domain service with non-trivial policy logic | Domain test (on domain service) |
-| Aggregate / VO / entity logic | Application test — exercised via handler, not tested directly |
-| Simple rule adequately covered by handler test | Don't duplicate — Application test is enough |
-
-**Default:** Start with Application test. Add Domain test only when complexity warrants it.
-
-## Decision Framework: 3 Questions
-
-Ask yourself these 3 questions to route a test to the right layer:
-
-**1. Am I testing a pure business rule?**
-→ **Domain test** — isolated, no mocks, state-based assertions on a **domain service** (e.g. `EligibilityPolicy`). Aggregates, VOs, and entities are not tested directly.
-
-**2. Am I testing a use case?**
-→ **Sociable Application test**
-- Real Domain objects
-- External ports (repositories, services) faked/in-memory
-
-**3. Am I testing a technical integration?**
-→ **Integration test** — full stack, real infrastructure (Testcontainers, HTTP client).
+3. **Integration Tests** (for full stack validation)
+   - Test API endpoints with real infrastructure (Testcontainers)
+   - Located in: `tests/[Project].IntegrationTests/`
 
 ## Testing Rules
 
 ### DO ✅
-- Test handlers with real Domain objects (aggregates, VOs, services)
-- Mock only Infrastructure layer (repositories, external services)
-- Keep tests fast (no Testcontainers, no DB, no network, < 100ms)
-- Name tests with business language (`WhenDoingSomething_ShouldExpectedBehavior`)
-- Verify Domain state changes through observable outcomes
+
+- **Test Application handlers with real Domain objects**
+  - Create real aggregates, entities, value objects
+  - Invoke real Domain methods
+  - Verify Domain state changes
+
+- **Mock only Infrastructure layer**
+  - Mock repositories (IOrderRepository, etc.)
+  - Mock external services (IPaymentService, etc.)
+  - Mock infrastructure interfaces defined in Application layer
+
+- **Keep tests fast**
+  - No Testcontainers in unit tests
+  - No database access
+  - No network calls
+  - Target: < 100ms per test
+
+- **Use meaningful test names**
+  - Follow pattern: `WhenDoingSomething_ShouldExpectedBehavior`
+  - Example: `WhenPlacingOrderWithInvalidQuantity_ShouldThrowDomainException`
 
 ### DON'T ❌
-- Don't mock Domain objects (`A.Fake<Order>()` — never)
-- Don't centralize strategic rules in handlers — keep them in Domain
-- Don't use Testcontainers in unit tests — save for Integration
-- Don't test implementation details — test behavior
 
-## Benefits
+- **Don't mock Domain objects in Application tests**
+  - ❌ Bad: `A.CallTo(() => fakeOrder.AddItem(...))`
+  - ✅ Good: `var order = Order.Create(...); order.AddItem(...);`
+
+- **Don't test Domain extensively in isolation**
+  - Domain is tested through Application tests
+  - Only add specific Domain tests for complex calculations or edge cases
+
+- **Don't use Testcontainers in unit tests**
+  - Keep unit tests fast
+  - Use Testcontainers only in Integration tests
+
+## Example Structure
+
+```
+tests/
+  [Project].UnitTests/
+    Application/
+      Orders/
+        PlaceOrderCommandHandlerTests.cs
+        GetOrderQueryHandlerTests.cs
+      Customers/
+        CreateCustomerCommandHandlerTests.cs
+    Domain/
+      Orders/
+        OrderSpecificationTests.cs (only if needed)
+```
+
+## When to Add Domain Tests
+
+Add specific Domain tests only when:
+- Complex calculations exist that are hard to test through Application
+- Critical specifications need explicit validation
+- Edge cases are easier to test in isolation
+- Business rules are complex and need focused testing
+
+Most of the time, Application tests are sufficient.
+
+## Tools
+
+- **xUnit v3**: Test framework
+- **FakeItEasy**: For mocking Infrastructure dependencies
+- **No Testcontainers**: In unit tests (use in Integration tests only)
+
+## Benefits of This Approach
 
 1. **Fast execution**: No external dependencies in unit tests
 2. **Real behavior**: Tests verify actual Domain logic, not mocks
-3. **Refactoring safety**: Tests break only when behavior changes
+3. **Refactoring safety**: Tests break only when behavior changes, not structure
 4. **Clear intent**: Tests show how Domain and Application work together
 5. **Maintainability**: Fewer mocks = less maintenance overhead
