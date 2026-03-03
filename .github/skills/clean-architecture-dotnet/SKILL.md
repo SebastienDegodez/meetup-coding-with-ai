@@ -670,7 +670,7 @@ public async Task WhenPlacingValidOrder_ShouldCreateConfirmedOrder()
 }
 ```
 
-**REQUIRED SUB-SKILL:** Use application-layer-testing for complete handler testing strategy.
+**REQUIRED SUB-SKILL:** Use outside-in-tdd for complete handler testing strategy.
 
 ### ArchitectureTests
 
@@ -758,5 +758,5 @@ dotnet test --filter "FullyQualifiedName~IntegrationTests"
 
 ## Related Skills
 
-- **REQUIRED SUB-SKILL:** application-layer-testing - How to test Application handlers with sociable testing
+- **REQUIRED SUB-SKILL:** outside-in-tdd - How to test Application and Domain layers with sociable testing
 

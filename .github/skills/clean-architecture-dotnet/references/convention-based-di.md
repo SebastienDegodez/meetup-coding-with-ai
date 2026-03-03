@@ -338,4 +338,4 @@ public async Task PlaceOrder_ShouldResolveHandlerFromDI()
 ## Related
 
 - **Clean Architecture**: [clean-architecture-dotnet skill](../SKILL.md)
-- **Testing**: See the `application-layer-testing` skill for testing patterns
+- **Testing**: See the `outside-in-tdd` skill for testing patterns
