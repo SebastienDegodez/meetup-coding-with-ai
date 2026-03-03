@@ -12,7 +12,7 @@ Mutation testing introduces small changes (mutations) to your code and verifies 
 - **Killed mutant**: Tests fail when mutation is introduced ✅
 - **Surviving mutant**: Tests still pass despite mutation ❌
 
-**Goal**: Kill all mutants (100% mutation score)
+**Goal**: 0 surviving mutants for Domain and Application code.
 
 ## Tool: Stryker.NET
 
@@ -42,8 +42,8 @@ Create `stryker-config.json` in test project root:
     ],
     "thresholds": {
       "high": 100,
-      "low": 95,
-      "break": 95
+      "low": 100,
+      "break": 100
     },
     "reporters": ["html", "progress", "cleartext"]
   }
@@ -52,8 +52,8 @@ Create `stryker-config.json` in test project root:
 
 **Key settings**:
 - `mutate`: Exclude DTOs/ViewModels (no logic), focus on Handlers and Domain
-- `thresholds`: Require 95-100% mutation score
-- `break`: Build fails if score < 95%
+- `thresholds`: Set strict gates for Domain/Application (100/100/100)
+- `break`: Build fails if any mutant survives in targeted code
 
 ### Running Mutation Tests
 
@@ -242,7 +242,7 @@ public async Task WhenRegisteringItemWithNegativeQuantity_ShouldThrowException()
 ### DO ✅
 
 - **Run mutation tests after unit tests pass**
-- **Target 100% mutation score** for critical business logic
+- **Target 0 surviving mutants** for critical business logic
 - **Test edge cases and boundaries** explicitly
 - **Verify state changes** in assertions (not just method calls)
 - **Use specific assertions** (`Assert.Equal`, not just `Assert.NotNull`)
@@ -288,15 +288,24 @@ public async Task WhenPlacingOrder_ShouldConfirmOrder()
 ```
 
 2. **Run unit tests** → Pass ✅
-3. **Run mutation tests** → 100% mutation score ✅
-4. **Confidence**: Business logic is correct and fully tested
+3. **Run mutation tests** -> 0 surviving mutants ✅
+4. **Confidence**: Business logic is verified against mutation sensitivity
 
 ## Mutation Score Targets
 
-- **Domain layer**: 100% (aggregates, entities, value objects, specifications)
-- **Application layer**: 100% (command/query handlers, business orchestration)
-- **Infrastructure**: 80-90% (less critical, mocked in unit tests)
+- **Domain layer**: 100% (0 surviving mutants)
+- **Application layer**: 100% (0 surviving mutants)
+- **Infrastructure**: 70-85% (less critical, mocked in unit tests)
 - **DTOs/ViewModels**: 0% (excluded, no logic)
+
+## When Mutants Survive
+
+For Domain/Application survivors:
+1. Analyze each surviving mutant and identify missing business behavior.
+2. Propose new functional tests to the user (Given/When/Then language).
+3. Wait for user validation before implementing those tests.
+4. Implement validated tests and rerun mutation tests.
+5. Repeat until 0 surviving mutants.
 
 ## Troubleshooting
 
