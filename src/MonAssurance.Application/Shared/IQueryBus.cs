@@ -1,9 +1,9 @@
 namespace MonAssurance.Application.Shared;
 
 /// <summary>
-/// Sends queries to their registered handlers.
+/// Bus for dispatching queries to their registered handlers.
 /// </summary>
-public interface IQuerySender
+public interface IQueryBus
 {
     Task<TResult> SendAsync<TQuery, TResult>(TQuery query, CancellationToken cancellationToken = default);
 }

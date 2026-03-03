@@ -4,13 +4,13 @@ using MonAssurance.Application.Shared;
 namespace MonAssurance.Infrastructure.CQRS;
 
 /// <summary>
-/// Default implementation of query sender using DI to resolve handlers.
+/// Default implementation of query bus using DI to resolve handlers.
 /// </summary>
-public sealed class QuerySender : IQuerySender
+public sealed class QueryBus : IQueryBus
 {
     private readonly IServiceProvider _serviceProvider;
 
-    public QuerySender(IServiceProvider serviceProvider)
+    public QueryBus(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
     }
