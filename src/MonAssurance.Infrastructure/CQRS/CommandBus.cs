@@ -4,18 +4,18 @@ using MonAssurance.Application.Shared;
 namespace MonAssurance.Infrastructure.CQRS;
 
 /// <summary>
-/// Default implementation of command sender using DI to resolve handlers.
+/// Default implementation of command bus using DI to resolve handlers.
 /// </summary>
-public sealed class CommandSender : ICommandSender
+public sealed class CommandBus : ICommandBus
 {
     private readonly IServiceProvider _serviceProvider;
 
-    public CommandSender(IServiceProvider serviceProvider)
+    public CommandBus(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
     }
 
-    public async Task SendAsync<TCommand>(TCommand command, CancellationToken cancellationToken = default)
+    public async Task PublishAsync<TCommand>(TCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
         
@@ -23,7 +23,7 @@ public sealed class CommandSender : ICommandSender
         await handler.HandleAsync(command, cancellationToken);
     }
 
-    public async Task<TResult> SendAsync<TCommand, TResult>(TCommand command, CancellationToken cancellationToken = default)
+    public async Task<TResult> PublishAsync<TCommand, TResult>(TCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
         
