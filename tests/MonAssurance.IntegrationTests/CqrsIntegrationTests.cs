@@ -10,7 +10,7 @@ namespace MonAssurance.IntegrationTests;
 public sealed class CqrsIntegrationTests
 {
     [Fact]
-    public async Task SendAsync_WithCommandHandler_ShouldCallHandler()
+    public async Task PublishAsync_WithCommandHandler_ShouldCallHandler()
     {
         // Arrange
         var services = new ServiceCollection();
@@ -18,11 +18,11 @@ public sealed class CqrsIntegrationTests
         services.AddHandler<TestCommandHandler>();
         
         using var provider = services.BuildServiceProvider();
-        var sender = provider.GetRequiredService<ICommandSender>();
+        var publisher = provider.GetRequiredService<ICommandBus>();
         var command = new TestCommand { Value = "test" };
         
         // Act
-        await sender.SendAsync(command);
+        await publisher.PublishAsync(command);
         
         // Assert - Handler should be called (tracked in TestCommandHandler.WasCalled)
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand>>();
@@ -39,7 +39,7 @@ public sealed class CqrsIntegrationTests
         services.AddHandler<TestQueryHandler>();
         
         using var provider = services.BuildServiceProvider();
-        var sender = provider.GetRequiredService<IQuerySender>();
+        var sender = provider.GetRequiredService<IQueryBus>();
         var query = new TestQuery { Id = 42 };
         
         // Act
@@ -53,7 +53,7 @@ public sealed class CqrsIntegrationTests
     }
 
     [Fact]
-    public async Task SendAsync_WithMockedHandler_ShouldCallMock()
+    public async Task PublishAsync_WithMockedHandler_ShouldCallMock()
     {
         // Arrange
         var services = new ServiceCollection();
@@ -63,11 +63,11 @@ public sealed class CqrsIntegrationTests
         services.AddScoped<ICommandHandler<TestCommand>>(_ => mockHandler);
         
         using var provider = services.BuildServiceProvider();
-        var sender = provider.GetRequiredService<ICommandSender>();
+        var publisher = provider.GetRequiredService<ICommandBus>();
         var command = new TestCommand { Value = "mocked" };
         
         // Act
-        await sender.SendAsync(command);
+        await publisher.PublishAsync(command);
         
         // Assert
         A.CallTo(() => mockHandler.HandleAsync(command, A<CancellationToken>._))
@@ -75,7 +75,7 @@ public sealed class CqrsIntegrationTests
     }
 
     [Fact]
-    public async Task SendAsync_WithScopedHandlers_ShouldResolveNewInstancePerScope()
+    public async Task PublishAsync_WithScopedHandlers_ShouldResolveNewInstancePerScope()
     {
         // Arrange
         var services = new ServiceCollection();
@@ -84,21 +84,21 @@ public sealed class CqrsIntegrationTests
         
         using var provider = services.BuildServiceProvider();
         
-        // Act - Create two scopes and send commands
+        // Act - Create two scopes and publish commands
         ICommandHandler<TestCommand> handler1;
         ICommandHandler<TestCommand> handler2;
         
         using (var scope1 = provider.CreateScope())
         {
-            var sender1 = scope1.ServiceProvider.GetRequiredService<ICommandSender>();
-            await sender1.SendAsync(new TestCommand { Value = "scope1" });
+            var publisher1 = scope1.ServiceProvider.GetRequiredService<ICommandBus>();
+            await publisher1.PublishAsync(new TestCommand { Value = "scope1" });
             handler1 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand>>();
         }
         
         using (var scope2 = provider.CreateScope())
         {
-            var sender2 = scope2.ServiceProvider.GetRequiredService<ICommandSender>();
-            await sender2.SendAsync(new TestCommand { Value = "scope2" });
+            var publisher2 = scope2.ServiceProvider.GetRequiredService<ICommandBus>();
+            await publisher2.PublishAsync(new TestCommand { Value = "scope2" });
             handler2 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand>>();
         }
         

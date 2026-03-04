@@ -68,9 +68,9 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services)
     {
-        // Register CQRS senders
-        services.AddScoped<ICommandSender, CommandSender>();
-        services.AddScoped<IQuerySender, QuerySender>();
+        // Register CQRS buses
+        services.AddScoped<ICommandBus, CommandBus>();
+        services.AddScoped<IQueryBus, QueryBus>();
         
         return services;
     }
