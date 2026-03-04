@@ -77,6 +77,31 @@ Implement complete, clean, production-ready solution in one shot.
 | **Guidance** (**MANDATORY**) | Orient architectural approach + **developer validates test** | Design direction clear, developer has confirmed test |
 | **SYNTHESIZE GREEN** | Synthesize complete clean solution | Tests green, architecture respected, production-ready |
 
+## When Orchestrating Subagents (MANDATORY)
+
+If you are an orchestrating agent using `subagent-driven-development`:
+
+**NEVER put RED and SYNTHESIZE GREEN in the same subagent prompt.**
+
+Split every TDD task into **two separate dispatches**:
+
+1. **Dispatch 1 — RED only:** subagent writes test, stubs to compile, runs to confirm behavior failure, reports the failing test output
+2. **YOU pause** — show the failing test to the developer, wait for explicit confirmation ("ok, proceed")
+3. **Dispatch 2 — SYNTHESIZE GREEN:** only after developer approves the test
+
+The mandatory human validation checkpoint is the **orchestrator's responsibility**. It cannot be delegated to the subagent.
+
+**Red flags — you are violating this rule if:**
+- Your subagent prompt contains both "write the failing test" AND "implement the solution"
+- You wrote `PAUSE` in a plan comment but included all steps in one prompt
+- You assumed the developer would confirm via the plan document
+
+| Rationalization | Reality |
+|---|---|
+| "The pause is in the plan text" | Plans are documentation. Dispatch boundaries are enforcement. |
+| "The subagent will stop and ask" | Subagents execute what they receive. Split the prompt. |
+| "It's more efficient in one shot" | Efficiency that skips developer validation is not efficiency. |
+
 ## Integration
 
 **REQUIRED BACKGROUND:** `test-driven-development` skill (TDD discipline foundation — this skill supersets it).
