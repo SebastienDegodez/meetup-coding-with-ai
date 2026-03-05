@@ -17,6 +17,8 @@ Hard rule:
 | Français | English | Notes |
 | --- | --- | --- |
 | éligibilité | eligibility | Main business capability |
+| conducteur trop jeune | driver too young for this vehicle | Rejection reason — age below minimum for Car or Motorcycle (18) or ElectricScooter (16) |
+| expérience insuffisante pour la puissance | insufficient experience for the power | Rejection reason — license years < 5 for Motorcycle > 100 hp |
 
 
 ## Update Checklist

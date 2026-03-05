@@ -11,15 +11,16 @@ public sealed class CheckEligibilityQueryHandler : IQueryHandler<CheckEligibilit
         CheckEligibilityQuery query,
         CancellationToken cancellationToken = default)
     {
-        var driver = new DriverInfo { Age = query.DriverAge, LicenseYears = query.DriverLicenseYears };
-        var vehicle = new VehicleInfo { Type = query.VehicleType, Horsepower = query.VehicleHorsepower };
+        var driver = new DriverInfo(new DriverAge(query.DriverAge), new LicenseExperience(query.DriverLicenseYears));
+        var horsepower = query.VehicleHorsepower.HasValue ? new Horsepower(query.VehicleHorsepower.Value) : null;
+        var vehicle = new VehicleInfo(query.VehicleType, horsepower);
 
         var result = _policy.Evaluate(driver, vehicle);
 
         return Task.FromResult(new CheckEligibilityQueryResult
         {
-            IsEligible = result.IsEligible,
-            RejectionReason = result.RejectionReason
+            IsEligible = result.IsAccepted(),
+            RejectionReason = result.RejectionReason()
         });
     }
 }
