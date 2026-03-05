@@ -19,7 +19,7 @@ public sealed class CheckEligibilityQueryHandlerTests
         var result = await handler.HandleAsync(query);
 
         Assert.False(result.IsEligible);
-        Assert.Equal("Driver too young for this vehicle", result.RejectionReason);
+        Assert.Equal(EligibilityRejectionReasons.DRIVER_TOO_YOUNG_FOR_VEHICLE, result.RejectionReason);
     }
 
     [Fact]
@@ -54,6 +54,6 @@ public sealed class CheckEligibilityQueryHandlerTests
         var result = await handler.HandleAsync(query);
 
         Assert.False(result.IsEligible);
-        Assert.Equal("Insufficient experience for the power", result.RejectionReason);
+        Assert.Equal(EligibilityRejectionReasons.INSUFFICIENT_EXPERIENCE_FOR_POWER, result.RejectionReason);
     }
 }
