@@ -18,6 +18,17 @@ fi
 
 PROJECT_NAME="$1"
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TEMPLATES_DIR="$(dirname "$SCRIPT_DIR")/templates"
+
+# Copy a template file to destination, substituting [ProjectName] with the actual project name.
+copy_template() {
+    local src="$TEMPLATES_DIR/$1"
+    local dest="$2"
+    mkdir -p "$(dirname "$dest")"
+    sed "s/\[ProjectName\]/$PROJECT_NAME/g" "$src" > "$dest"
+}
+
 echo "🚀 Initializing Clean Architecture CQRS project: $PROJECT_NAME"
 
 # Create solution
@@ -73,9 +84,8 @@ dotnet add "src/$PROJECT_NAME.Application/$PROJECT_NAME.Application.csproj" refe
 dotnet add "src/$PROJECT_NAME.Infrastructure/$PROJECT_NAME.Infrastructure.csproj" reference "src/$PROJECT_NAME.Application/$PROJECT_NAME.Application.csproj"
 dotnet add "src/$PROJECT_NAME.Infrastructure/$PROJECT_NAME.Infrastructure.csproj" reference "src/$PROJECT_NAME.Domain/$PROJECT_NAME.Domain.csproj"
 
-# API -> Infrastructure, Domain (NOT Application)
+# API -> Infrastructure only (Application and Domain are transitive — do NOT add direct references)
 dotnet add "src/$PROJECT_NAME.Api/$PROJECT_NAME.Api.csproj" reference "src/$PROJECT_NAME.Infrastructure/$PROJECT_NAME.Infrastructure.csproj"
-dotnet add "src/$PROJECT_NAME.Api/$PROJECT_NAME.Api.csproj" reference "src/$PROJECT_NAME.Domain/$PROJECT_NAME.Domain.csproj"
 
 # UnitTests -> Application, Domain
 dotnet add "tests/$PROJECT_NAME.UnitTests/$PROJECT_NAME.UnitTests.csproj" reference "src/$PROJECT_NAME.Application/$PROJECT_NAME.Application.csproj"
@@ -124,271 +134,25 @@ mkdir -p "tests/$PROJECT_NAME.IntegrationTests/Api"
 
 # Create marker interfaces
 echo ""
-echo "📄 Creating marker interfaces..."
+echo "📄 Creating marker interfaces and CQRS files from templates..."
 
-cat > "src/$PROJECT_NAME.Domain/IDomainMarker.cs" <<EOF
-namespace $PROJECT_NAME.Domain;
-
-/// <summary>
-/// Marker interface to identify the Domain assembly.
-/// Use: typeof(IDomainMarker).Assembly
-/// </summary>
-public interface IDomainMarker { }
-EOF
-
-cat > "src/$PROJECT_NAME.Application/IApplicationMarker.cs" <<EOF
-namespace $PROJECT_NAME.Application;
-
-/// <summary>
-/// Marker interface to identify the Application assembly.
-/// Use: typeof(IApplicationMarker).Assembly
-/// </summary>
-public interface IApplicationMarker { }
-EOF
-
-# Create CQRS interfaces in Shared
-echo ""
-echo "📝 Creating CQRS handler interfaces..."
-
-cat > "src/$PROJECT_NAME.Application/Shared/ICommandHandler.cs" <<EOF
-namespace $PROJECT_NAME.Application.Shared;
-
-/// <summary>
-/// Handler for commands that don't return a result (void operations).
-/// </summary>
-public interface ICommandHandler<in TCommand>
-{
-    Task HandleAsync(TCommand command, CancellationToken cancellationToken = default);
-}
-
-/// <summary>
-/// Handler for commands that return a result.
-/// </summary>
-public interface ICommandHandler<in TCommand, TResult>
-{
-    Task<TResult> HandleAsync(TCommand command, CancellationToken cancellationToken = default);
-}
-EOF
-
-cat > "src/$PROJECT_NAME.Application/Shared/IQueryHandler.cs" <<EOF
-namespace $PROJECT_NAME.Application.Shared;
-
-/// <summary>
-/// Handler for queries (read operations).
-/// </summary>
-public interface IQueryHandler<in TQuery, TResult>
-{
-    Task<TResult> HandleAsync(TQuery query, CancellationToken cancellationToken = default);
-}
-EOF
-
-# Create Bus interfaces
-echo ""
-echo "📝 Creating CQRS bus interfaces..."
-
-cat > "src/$PROJECT_NAME.Application/Shared/ICommandBus.cs" <<EOF
-namespace $PROJECT_NAME.Application.Shared;
-
-/// <summary>
-/// Dispatches commands to their registered handlers.
-/// </summary>
-public interface ICommandBus
-{
-    Task PublishAsync<TCommand>(TCommand command, CancellationToken cancellationToken = default);
-    Task<TResult> PublishAsync<TCommand, TResult>(TCommand command, CancellationToken cancellationToken = default);
-}
-EOF
-
-cat > "src/$PROJECT_NAME.Application/Shared/IQueryBus.cs" <<EOF
-namespace $PROJECT_NAME.Application.Shared;
-
-/// <summary>
-/// Dispatches queries to their registered handlers.
-/// </summary>
-public interface IQueryBus
-{
-    Task<TResult> SendAsync<TQuery, TResult>(TQuery query, CancellationToken cancellationToken = default);
-}
-EOF
-
-# Create Bus implementations
-echo ""
-echo "📝 Creating CQRS bus implementations..."
-
-mkdir -p "src/$PROJECT_NAME.Infrastructure/CQRS"
-
-cat > "src/$PROJECT_NAME.Infrastructure/CQRS/CommandBus.cs" <<EOF
-using Microsoft.Extensions.DependencyInjection;
-using $PROJECT_NAME.Application.Shared;
-
-namespace $PROJECT_NAME.Infrastructure.CQRS;
-
-/// <summary>
-/// Default implementation of command bus using DI to resolve handlers.
-/// </summary>
-public sealed class CommandBus : ICommandBus
-{
-    private readonly IServiceProvider _serviceProvider;
-
-    public CommandBus(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
-
-    public async Task PublishAsync<TCommand>(TCommand command, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(command);
-        var handler = _serviceProvider.GetRequiredService<ICommandHandler<TCommand>>();
-        await handler.HandleAsync(command, cancellationToken);
-    }
-
-    public async Task<TResult> PublishAsync<TCommand, TResult>(TCommand command, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(command);
-        var handler = _serviceProvider.GetRequiredService<ICommandHandler<TCommand, TResult>>();
-        return await handler.HandleAsync(command, cancellationToken);
-    }
-}
-EOF
-
-cat > "src/$PROJECT_NAME.Infrastructure/CQRS/QueryBus.cs" <<EOF
-using Microsoft.Extensions.DependencyInjection;
-using $PROJECT_NAME.Application.Shared;
-
-namespace $PROJECT_NAME.Infrastructure.CQRS;
-
-/// <summary>
-/// Default implementation of query bus using DI to resolve handlers.
-/// </summary>
-public sealed class QueryBus : IQueryBus
-{
-    private readonly IServiceProvider _serviceProvider;
-
-    public QueryBus(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
-
-    public async Task<TResult> SendAsync<TQuery, TResult>(TQuery query, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(query);
-        var handler = _serviceProvider.GetRequiredService<IQueryHandler<TQuery, TResult>>();
-        return await handler.HandleAsync(query, cancellationToken);
-    }
-}
-EOF
-
-# Create DependencyInjection.cs
-echo ""
-echo "📝 Creating DependencyInjection.cs..."
-
-cat > "src/$PROJECT_NAME.Infrastructure/DependencyInjection.cs" <<EOF
-using Microsoft.Extensions.DependencyInjection;
-using $PROJECT_NAME.Application.Shared;
-using $PROJECT_NAME.Application;
-using $PROJECT_NAME.Infrastructure.CQRS;
-
-namespace $PROJECT_NAME.Infrastructure;
-
-public static class DependencyInjection
-{
-    /// <summary>
-    /// Registers a single command or query handler.
-    /// </summary>
-    public static IServiceCollection AddHandler<THandler>(this IServiceCollection services)
-        where THandler : class
-    {
-        var handlerType = typeof(THandler);
-        var handlerInterfaces = handlerType.GetInterfaces()
-            .Where(i => i.IsGenericType &&
-                   (i.GetGenericTypeDefinition() == typeof(ICommandHandler<>) ||
-                    i.GetGenericTypeDefinition() == typeof(ICommandHandler<,>) ||
-                    i.GetGenericTypeDefinition() == typeof(IQueryHandler<,>)));
-
-        foreach (var @interface in handlerInterfaces)
-            services.AddScoped(@interface, handlerType);
-
-        return services;
-    }
-
-    /// <summary>
-    /// Registers all command and query handlers from the Application assembly.
-    /// </summary>
-    public static IServiceCollection AddApplicationHandlers(
-        this IServiceCollection services)
-    {
-        var applicationAssembly = typeof(IApplicationMarker).Assembly;
-
-        var allTypes = applicationAssembly.GetTypes()
-            .Where(t => !t.IsInterface && !t.IsAbstract);
-
-        foreach (var type in allTypes)
-        {
-            var handlerInterfaces = type.GetInterfaces()
-                .Where(i => i.IsGenericType &&
-                       (i.GetGenericTypeDefinition() == typeof(ICommandHandler<>) ||
-                        i.GetGenericTypeDefinition() == typeof(ICommandHandler<,>) ||
-                        i.GetGenericTypeDefinition() == typeof(IQueryHandler<,>)));
-
-            foreach (var @interface in handlerInterfaces)
-                services.AddScoped(@interface, type);
-        }
-
-        return services;
-    }
-
-    /// <summary>
-    /// Registers Infrastructure services (CQRS buses).
-    /// Does NOT register handlers — use AddHandler&lt;T&gt;() or AddApplicationHandlers() separately.
-    /// </summary>
-    public static IServiceCollection AddInfrastructure(
-        this IServiceCollection services)
-    {
-        services.AddScoped<ICommandBus, CommandBus>();
-        services.AddScoped<IQueryBus, QueryBus>();
-
-        return services;
-    }
-}
-EOF
-
-# Create marker interfaces for Infrastructure and API
-cat > "src/$PROJECT_NAME.Infrastructure/IInfrastructureMarker.cs" <<EOF
-namespace $PROJECT_NAME.Infrastructure;
-
-/// <summary>
-/// Marker interface to identify the Infrastructure assembly.
-/// Use: typeof(IInfrastructureMarker).Assembly
-/// </summary>
-public interface IInfrastructureMarker { }
-EOF
-
-cat > "src/$PROJECT_NAME.Api/IApiMarker.cs" <<EOF
-namespace $PROJECT_NAME.Api;
-
-/// <summary>
-/// Marker interface to identify the API assembly.
-/// Use: typeof(IApiMarker).Assembly
-/// </summary>
-public interface IApiMarker { }
-EOF
+copy_template "Domain/IDomainMarker.cs"              "src/$PROJECT_NAME.Domain/IDomainMarker.cs"
+copy_template "Application/IApplicationMarker.cs"    "src/$PROJECT_NAME.Application/IApplicationMarker.cs"
+copy_template "Application/Shared/ICommandHandler.cs" "src/$PROJECT_NAME.Application/Shared/ICommandHandler.cs"
+copy_template "Application/Shared/IQueryHandler.cs"  "src/$PROJECT_NAME.Application/Shared/IQueryHandler.cs"
+copy_template "Application/Shared/ICommandBus.cs"    "src/$PROJECT_NAME.Application/Shared/ICommandBus.cs"
+copy_template "Application/Shared/IQueryBus.cs"      "src/$PROJECT_NAME.Application/Shared/IQueryBus.cs"
+copy_template "Infrastructure/IInfrastructureMarker.cs" "src/$PROJECT_NAME.Infrastructure/IInfrastructureMarker.cs"
+copy_template "Infrastructure/CQRS/CommandBus.cs"    "src/$PROJECT_NAME.Infrastructure/CQRS/CommandBus.cs"
+copy_template "Infrastructure/CQRS/QueryBus.cs"      "src/$PROJECT_NAME.Infrastructure/CQRS/QueryBus.cs"
+copy_template "Infrastructure/DependencyInjection.cs" "src/$PROJECT_NAME.Infrastructure/DependencyInjection.cs"
+copy_template "Api/IApiMarker.cs"                    "src/$PROJECT_NAME.Api/IApiMarker.cs"
 
 # Copy Architecture test template to IntegrationTests
 echo ""
 echo "🏛️ Creating architecture tests..."
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TEMPLATES_DIR="$(dirname "$SCRIPT_DIR")/templates/IntegrationTests"
-
-if [ -d "$TEMPLATES_DIR" ]; then
-    cp "$TEMPLATES_DIR/ArchitectureTests.cs" "tests/$PROJECT_NAME.IntegrationTests/ArchitectureTests.cs" 2>/dev/null || true
-    
-    # Replace placeholder project name in template
-    if [ -f "tests/$PROJECT_NAME.IntegrationTests/ArchitectureTests.cs" ]; then
-        sed -i.bak "s/\[ProjectName\]/$PROJECT_NAME/g" "tests/$PROJECT_NAME.IntegrationTests/ArchitectureTests.cs"
-        rm -f "tests/$PROJECT_NAME.IntegrationTests/ArchitectureTests.cs.bak"
-    fi
-fi
+copy_template "IntegrationTests/ArchitectureTests.cs" "tests/$PROJECT_NAME.IntegrationTests/ArchitectureTests.cs"
 
 # Build to verify
 echo ""
