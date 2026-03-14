@@ -465,9 +465,9 @@ public sealed class EligibilityPolicyTests
 }
 ```
 
-### Key Differences from Application Tests
+### Key Differences from Acceptance Tests
 
-| Aspect | Application Test | Domain Test |
+| Aspect | Acceptance Test | Domain Test |
 |---|---|---|
 | Dependencies | Mock Infrastructure | None (pure) |
 | Subject | Handler (orchestrator) | Aggregate/VO/Service |

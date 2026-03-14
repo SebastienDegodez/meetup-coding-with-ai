@@ -17,8 +17,8 @@ This testing strategy follows Martin Fowler's **sociable testing** approach:
 
 ### Domain Layer Tests (when needed)
 - Test **domain services** (policies, specifications, calculators) in isolation
-- Aggregates, value objects, and entities are **not** tested directly — they are exercised through the domain service or through Application tests
-- Most Domain logic is already covered through Application tests
+- Aggregates, value objects, and entities are **not** tested directly — they are exercised through the domain service or through Acceptance tests
+- Most Domain logic is already covered through Acceptance tests
 - Located in: `tests/[Project].UnitTests/Domain/`
 
 ### Integration Tests (full stack)
@@ -29,13 +29,13 @@ This testing strategy follows Martin Fowler's **sociable testing** approach:
 
 | Signal | Route to |
 |---|---|
-| Orchestration (load/save/publish/map) | Application test |
+| Orchestration (load/save/publish/map) | Acceptance test |
 | Complex business rules with edge-case matrices | Domain test (on domain service) |
 | Domain service with non-trivial policy logic | Domain test (on domain service) |
-| Aggregate / VO / entity logic | Application test — exercised via handler, not tested directly |
-| Simple rule adequately covered by handler test | Don't duplicate — Application test is enough |
+| Aggregate / VO / entity logic | Acceptance test — exercised via handler, not tested directly |
+| Simple rule adequately covered by handler test | Don't duplicate — Acceptance test is enough |
 
-**Default:** Start with Application test. Add Domain test only when complexity warrants it.
+**Default:** Start with Acceptance test. Add Domain test only when complexity warrants it.
 
 ## Decision Framework: 3 Questions
 
@@ -45,7 +45,7 @@ Ask yourself these 3 questions to route a test to the right layer:
 → **Domain test** — isolated, no mocks, state-based assertions on a **domain service** (e.g. `EligibilityPolicy`). Aggregates, VOs, and entities are not tested directly.
 
 **2. Am I testing a use case?**
-→ **Sociable Application test**
+→ **Sociable Acceptance test**
 - Real Domain objects
 - External ports (repositories, services) faked/in-memory
 
