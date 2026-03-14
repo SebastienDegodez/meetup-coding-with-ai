@@ -1,6 +1,6 @@
 ---
 name: red-synthesize-green
-description: Use when following TDD to implement any feature or fix — defines the AI-optimized 2-step cycle where RED means behavior failure only and SYNTHESIZE GREEN produces clean code without a refactor phase
+description: Use when implementing any feature or fix using TDD, before writing any implementation code
 ---
 
 # RED → SYNTHESIZE GREEN (AI TDD Cycle)
@@ -104,5 +104,22 @@ The mandatory human validation checkpoint is the **orchestrator's responsibility
 
 ## Integration
 
-**REQUIRED BACKGROUND:** `test-driven-development` skill (TDD discipline foundation — this skill supersets it).
+**REQUIRED BACKGROUND:** `superpowers:test-driven-development` skill (TDD discipline foundation — this skill supersets it).
+
+## Quality Gate Ownership
+
+This skill owns the strict TDD quality gate for business logic layers:
+
+1. Application and Domain logic must reach **100% code coverage** before completion.
+2. Mutation testing on Application and Domain logic must end with **0 non-equivalent surviving mutants**.
+3. Any equivalent mutant must be explicitly documented with justification.
+
+If one of these conditions is not met, work is not complete.
+
+**Behavior-first workflow:** When used with `superpowers-whetstone:outside-in-tdd` and `superpowers-whetstone:writing-plans`:
+1. `superpowers-whetstone:gherkin-gate` defines WHAT (observable behavior)
+2. Acceptance tests map scenarios to executable tests (RED phase)
+3. This skill enforces the RED → validation → SYNTHESIZE GREEN cycle
+4. `superpowers-whetstone:mutation-testing` validates test quality after GREEN (before merge)
+
 Pair with domain-specific testing skills for patterns and examples.
