@@ -1,130 +1,145 @@
 ---
 name: outside-in-tdd
-description: Use when writing unit tests for DDD Clean Architecture layers — covers outside-in testing with Gherkin scenarios, Application handler orchestration tests, Domain logic tests, and mocking rules
+description: Use when writing tests from the outside-in, defining behavior before code, or any feature where tests should start from observable business behavior and let internal design emerge
 ---
 
 # Outside-In DDD Testing
 
 ## Overview
 
-Complete testing guide for Application and Domain layers in Clean Architecture.
-Start from observable business behavior (Gherkin), let design emerge from tests.
+Complete testing guide for outside-in development.
+Start from observable behavior (Gherkin), let design emerge from tests.
 
-**Core rule:** Real Domain objects, mocked Infrastructure only, fast in-memory tests.
+**Core rule:** Real domain objects, mocked external boundaries, fast in-memory tests.
 
 ## Outside-In Approach
 
-1. **Gherkin scenario** (Given/When/Then) — describes WHAT, not HOW
-2. **Map to Application test** — test handler entry point, mock only Infrastructure ports
-3. **Domain emerges** — test failures guide what Domain objects you need
+**Prerequisite:** Gherkin scenarios must be written and approved before this skill applies.
+**REQUIRED SUB-SKILL:** `superpowers-whetstone:gherkin-gate` — run first, wait for approval, then return here.
 
-## Application Tests (Sociable — Handler Level)
+### Step 1: Map Scenario to Acceptance Test
 
-Test command/query handlers with real Domain objects. Mock only Infrastructure. Verify orchestration + Domain state.
+1. **Map Gherkin to test** — translate scenario to a top-level acceptance-style test
+2. **Write the test** — mock only external boundaries, use real domain objects
+
+### Step 2: Let Domain Emerge
+
+Test failures reveal the domain you need. Let the design emerge from failing tests — don't design upfront.
+- Domain objects (policies, value objects, services) emerge from what the test demands
+- Orchestrators only coordinate — domain logic lives in the domain
+- Real domain objects (not mocked)
+- No design upfront — the test tells you what to build
+
+## Acceptance-Style Tests (Sociable — Entry Point Level)
+
+Test the system entry point with real domain objects. Mock only external boundaries. Verify orchestration + observable behavior.
 
 ```csharp
 [Fact]
-public async Task WhenSubmittingValidApplication_ShouldPersistPendingApplication()
+public async Task WhenSubmittingValidRequest_ShouldPersistPendingRecord()
 {
-    var repository = A.Fake<IApplicationRepository>();
-    var handler = new SubmitApplicationCommandHandler(repository);
-    var command = new SubmitApplicationCommand(CustomerId.CreateNew(),
-        new DriverInfo(Age: 25, LicenseYears: 3), new VehicleInfo(Type: "sedan", Age: 2));
+    var repository = A.Fake<IRequestRepository>();
+    var handler = new SubmitRequestHandler(repository);
+    var command = new SubmitRequestCommand(
+        UserId.CreateNew(),
+        new UserInfo(Age: 25, YearsOfExperience: 3),
+        new ResourceInfo(Type: "standard", Age: 1));
 
     await handler.Handle(command);
 
     A.CallTo(() => repository.AddAsync(
-        A<Application>.That.Matches(a => a.Status == ApplicationStatus.Pending),
+        A<RequestRecord>.That.Matches(r => r.Status == RequestStatus.Pending),
         A<CancellationToken>._)).MustHaveHappenedOnceExactly();
 }
 ```
 
-## Domain Tests (Pure — Logic Level)
+## Domain Tests (Pure — Rule Level)
 
-Test aggregates, value objects, domain services. No mocks — pure state-based assertions.
+Test business **policies**, **rules**, and **domain services** — not data structures directly.  
+No mocks — pure state-based assertions.
 
 ```csharp
 [Fact]
-public void WhenDriverIsUnder18_ShouldBeIneligible()
+public void WhenUserIsUnderMinimumAge_ShouldBeRejected()
 {
     var policy = new EligibilityPolicy();
-    var driver = new DriverInfo(Age: 17, LicenseYears: 0);
-    var vehicle = new VehicleInfo(Type: "sedan", Age: 1);
+    var user = new UserInfo(Age: 17, YearsOfExperience: 0);
+    var resource = new ResourceInfo(Type: "standard", Age: 1);
 
-    var result = policy.Evaluate(driver, vehicle);
+    var result = policy.Evaluate(user, resource);
 
     Assert.False(result.IsEligible);
-    Assert.Equal("driver_under_minimum_age", result.RejectionReason);
+    Assert.Equal("minimum_age_not_met", result.RejectionReason);
 }
 ```
+
+**What NOT to test directly:**
+- Basic constructors (unless complex invariants)
+- Simple value objects (covered by usage in policies/orchestrators)
+- Simple getters/setters
+- DTOs or passive data structures
 
 ## When to Write Which
 
 | Signal | Route to |
 |---|---|
-| Orchestration (load/save/publish) | Application test |
-| Complex rules, edge matrices, invariants | Domain test |
-| Simple rule covered by handler test | Don't duplicate |
+| Orchestration (load/save/publish) | Use Case test (Acceptance) |
+| Business rule inside an Aggregate | Use Case test (Acceptance) |
+| Complex invariants, large edge-case matrices, or reused rules | Extract to Policy + Domain test |
+| Simple rule | Already covered by primary Use Case test |
 
-**Default:** Application test first. Add Domain tests when complexity warrants it.
+**Default:** Start with a Use Case test. Add Domain tests only if extracting a complex rule makes testing simpler.
 
 ## Testing Rules
 
 ### DO ✅
-- Mock only Infrastructure (repositories, external services)
-- Use real Domain objects (aggregates, VOs, services)
+- Mock only external boundaries (repositories, external services)
+- Use real domain objects (entities, policies, services)
 - Keep tests fast (< 100ms, no DB, no network)
 - Name tests with business language (`WhenCondition_ShouldOutcome`)
 - Cover meaningful edge-case combinations
 
 ### DON'T ❌
-- Don't mock Domain objects (`A.Fake<Order>()` — never)
-- Don't centralize strategic rules in handlers
-- Don't use Testcontainers in unit tests — Integration only
+- Don't mock domain objects
+- Don't centralize strategic rules in orchestrators
+- Don't use integration tooling in unit tests
 - Don't test implementation details — test behavior
-- Don't use FluentAssertions — use xUnit native `Assert.*` (licensing)
+- Don't couple to a specific assertion library in the skill
 
 ## Anti-Patterns
 
-- Strategic rules in Application handlers instead of Domain
+- Strategic rules in orchestrators instead of domain
 - Over-mocking that hides real business behavior
 - Treating coverage percentage as the quality target
-- Duplicating Application test coverage with redundant Domain tests
+- Duplicating acceptance test coverage with redundant domain tests
 
-## Project Structure
+## Mutation Testing (Third Validation Layer)
 
-```
-tests/[Project].UnitTests/
-  Application/
-    [Feature]/
-      Commands/
-        [Action]CommandHandlerTests.cs
-      Queries/
-        [Action]QueryHandlerTests.cs
-  Domain/
-    [Feature]/
-      [Policy]Tests.cs
-```
+After both test streams are green, verify test effectiveness with mutation testing.
+
+**REQUIRED SUB-SKILL:** `superpowers-whetstone:mutation-testing` — run after tests green, before merge. 100% on business logic, equivalent mutants are the only accepted survivors.
 
 ## Common Mistakes
 
 | Mistake | Fix |
 |---|---|
-| Mocking Domain objects in Application tests | Use real Domain objects, mock only Infrastructure |
-| Writing Domain objects before RED test | Let design emerge from test failures |
-| Treating compilation errors as RED | Stub to compile, then confirm behavior failure |
+| Mocking domain objects in acceptance tests | Use real domain objects, mock only external boundaries |
+| Designing domain objects upfront | Let domain emerge from test failures — don't design before testing |
+| Treating compilation errors as failures | Stub to compile, then confirm behavior failure (see `red-synthesize-green`) |
 | Skipping Gherkin ("too small") | Even small features benefit from behavior-first thinking |
-
-## References & Templates
-
-- [references/testing-strategy.md](references/testing-strategy.md) — sociable vs solitary philosophy
-- [references/cqrs-patterns.md](references/cqrs-patterns.md) — handler structure, commands vs queries
-- [references/test-examples.md](references/test-examples.md) — complete code examples (Application + Domain)
-- [assets/CommandHandlerTestTemplate.cs](assets/CommandHandlerTestTemplate.cs) — Command handler test starter
-- [assets/QueryHandlerTestTemplate.cs](assets/QueryHandlerTestTemplate.cs) — Query handler test starter
+| Missing human validation loop | Ensure `red-synthesize-green` cycle is followed exactly |
+| Polluting Gherkin with class/endpoint names | Keep scenarios in business language only |
+| Testing data structures directly by default | Test policies/rules; data types are covered by usage |
+| Skipping mutation testing before merge | Run mutation-testing skill after tests green |
 
 ## Integration
 
-**REQUIRED PROCESS:** `red-synthesize-green` (follow the 2-step AI TDD cycle)
-**REQUIRED CONTEXT:** `clean-architecture-dotnet` (layer boundaries)
+**REQUIRED SUB-SKILL:** `superpowers-whetstone:gherkin-gate` — scenarios approved before this skill
+**REQUIRED SUB-SKILL:** `superpowers-whetstone:red-synthesize-green` — follow the 2-step AI TDD cycle
+**REQUIRED SUB-SKILL:** `superpowers-whetstone:mutation-testing` — run after tests green, before merge
+
+## References
+- [test-examples.md](references/test-examples.md) - Examples of both Acceptance and Domain tests.
+- [testing-strategy.md](references/testing-strategy.md) - Detailed explanation of the testing pyramid and strategy.
+- [cqrs-patterns.md](references/cqrs-patterns.md) - CQRS architecture references.
 
