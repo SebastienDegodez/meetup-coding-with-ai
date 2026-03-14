@@ -114,33 +114,4 @@ public sealed class ArchitectureTests
 
         Assert.True(result.IsSuccessful, $"API should not depend on Application. Use Infrastructure DI instead. Violations: {string.Join(", ", result.FailingTypeNames ?? [])}");
     }
-
-    /// <summary>
-    /// Ensures CommandHandlers follow naming convention for auto-discovery.
-    /// </summary>
-    [Fact]
-    public void CommandHandlers_Should_EndWith_CommandHandler()
-    {
-        var result = Types.InAssembly(ApplicationAssembly)
-            .That().ImplementInterface(typeof(ICommandHandler<>))
-            .Or().ImplementInterface(typeof(ICommandHandler<,>))
-            .Should().HaveNameEndingWith("CommandHandler")
-            .GetResult();
-
-        Assert.True(result.IsSuccessful, $"All command handlers must end with 'CommandHandler'. Violations: {string.Join(", ", result.FailingTypeNames ?? [])}");
-    }
-
-    /// <summary>
-    /// Ensures QueryHandlers follow naming convention for auto-discovery.
-    /// </summary>
-    [Fact]
-    public void QueryHandlers_Should_EndWith_QueryHandler()
-    {
-        var result = Types.InAssembly(ApplicationAssembly)
-            .That().ImplementInterface(typeof(IQueryHandler<,>))
-            .Should().HaveNameEndingWith("QueryHandler")
-            .GetResult();
-
-        Assert.True(result.IsSuccessful, $"All query handlers must end with 'QueryHandler'. Violations: {string.Join(", ", result.FailingTypeNames ?? [])}");
-    }
 }

@@ -85,7 +85,7 @@ public void Application_ShouldOnlyDependOn_Domain()
 - Reference Application and Domain layers
 - Implement repository interfaces from Domain
 - Provide dependency injection configuration
-- Use convention-based handler discovery
+- Use interface-based handler registration (`AddApplicationHandlers()` or `AddHandler<T>()`)
 
 **MUST NOT**:
 - Reference API layer
@@ -110,7 +110,7 @@ public void Infrastructure_ShouldNotHaveDependencyOn_Api()
 
 **MUST**:
 - Reference Infrastructure and Domain only
-- Inject `ICommandHandler<>` / `IQueryHandler<>` interfaces (resolved by Infrastructure DI)
+- Inject `ICommandBus` / `IQueryBus` (resolved by Infrastructure DI)
 - Define HTTP endpoints and controllers
 
 **MUST NOT**:
@@ -137,7 +137,7 @@ public void Api_ShouldNotHaveDependencyOn_Application()
 API → Infrastructure (outer to outer) ✅  
 API → Application (outer to inner) ❌ VIOLATION
 
-Infrastructure DI container bridges the gap via convention-based discovery.
+Infrastructure DI container bridges the gap via interface-based handler registration.
 
 ## Naming Convention Rules
 
@@ -157,20 +157,7 @@ public record OrderDto(Guid OrderId, string Status);
 
 ### CQRS Handlers
 
-**Commands**: Handler MUST end with `CommandHandler` suffix  
-**Queries**: Handler MUST end with `QueryHandler` suffix
-
-**Why**: Required for convention-based discovery in Infrastructure DI.
-
-```csharp
-// ✅ Correct
-public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, OrderId>
-
-public class GetOrderQueryHandler : IQueryHandler<GetOrderQuery, OrderViewModel>
-
-// ❌ Wrong
-public class PlaceOrderHandler : ICommandHandler<PlaceOrderCommand, OrderId>
-```
+No naming convention is enforced. Handlers are discovered by implementing `ICommandHandler<>` or `IQueryHandler<>` interface.
 
 ### Aggregates
 

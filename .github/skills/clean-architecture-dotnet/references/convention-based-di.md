@@ -1,12 +1,12 @@
-# Convention-Based Dependency Injection
+# Interface-Based Handler Registration
 
-Guide for implementing convention-based handler discovery in Clean Architecture CQRS projects.
+Guide for implementing interface-based handler discovery in Clean Architecture CQRS projects.
 
-## Why Convention-Based DI?
+## Why Interface-Based Registration?
 
 **Problem**: API layer cannot reference Application layer directly (Clean Architecture rule), yet endpoints need to invoke handlers.
 
-**Solution**: Infrastructure layer discovers handlers by naming convention and registers them in DI container. API injects interfaces.
+**Solution**: Infrastructure layer discovers handlers by implementing `ICommandHandler<>` / `IQueryHandler<>` and registers them in the DI container. Handlers are found by interface, not by name.
 
 ## Benefits
 
@@ -64,7 +64,7 @@ public interface IQueryBus
 
 ### 3. Implement Handlers (Application Layer)
 
-**Naming Convention**: Handler class must end with `CommandHandler` or `QueryHandler` suffix.
+Handlers are discovered by their **interface implementation**, not by name. Any class implementing `ICommandHandler<>` or `IQueryHandler<>` is registered automatically by `AddApplicationHandlers()`.
 
 ```csharp
 // Application/Orders/Commands/PlaceOrder/PlaceOrderCommandHandler.cs
@@ -97,7 +97,7 @@ public sealed class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand
 // Infrastructure/DependencyInjection.cs
 namespace MyProject.Infrastructure;
 
-using MyProject.Application;
+using System.Diagnostics.CodeAnalysis;
 using MyProject.Application.Shared;
 using MyProject.Infrastructure.CQRS;
 using Microsoft.Extensions.DependencyInjection;
@@ -105,14 +105,18 @@ using Microsoft.Extensions.DependencyInjection;
 public static class DependencyInjection
 {
     /// <summary>
-    /// Registers a single command or query handler.
+    /// Registers a single handler by its implemented ICommandHandler&lt;&gt; / IQueryHandler&lt;&gt; interfaces.
+    /// AOT-safe: THandler is statically known at call site; [DynamicallyAccessedMembers] tells the
+    /// trimmer to preserve interface metadata for this specific type.
     /// </summary>
-    public static IServiceCollection AddHandler<THandler>(this IServiceCollection services)
+    public static IServiceCollection AddHandler<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] THandler>(
+        this IServiceCollection services)
         where THandler : class
     {
         var handlerType = typeof(THandler);
         var handlerInterfaces = handlerType.GetInterfaces()
-            .Where(i => i.IsGenericType && 
+            .Where(i => i.IsGenericType &&
                    (i.GetGenericTypeDefinition() == typeof(ICommandHandler<>) ||
                     i.GetGenericTypeDefinition() == typeof(ICommandHandler<,>) ||
                     i.GetGenericTypeDefinition() == typeof(IQueryHandler<,>)));
@@ -124,41 +128,21 @@ public static class DependencyInjection
     }
 
     /// <summary>
-    /// Registers all command and query handlers from the Application assembly.
+    /// Registers all application handlers and CQRS buses.
+    /// Infrastructure knows all handler types (it references Application) — list them explicitly here.
+    /// This is the ONLY registration method. There is no reflection-based scan.
     /// </summary>
-    public static IServiceCollection AddApplicationHandlers(
-        this IServiceCollection services)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
-        var applicationAssembly = typeof(IApplicationMarker).Assembly;
-        
-        var allTypes = applicationAssembly.GetTypes()
-            .Where(t => !t.IsInterface && !t.IsAbstract);
-            
-        foreach (var type in allTypes)
-        {
-            var handlerInterfaces = type.GetInterfaces()
-                .Where(i => i.IsGenericType && 
-                       (i.GetGenericTypeDefinition() == typeof(ICommandHandler<>) ||
-                        i.GetGenericTypeDefinition() == typeof(ICommandHandler<,>) ||
-                        i.GetGenericTypeDefinition() == typeof(IQueryHandler<,>)));
-                        
-            foreach (var @interface in handlerInterfaces)
-                services.AddScoped(@interface, type);
-        }
-        
-        return services;
-    }
-
-    /// <summary>
-    /// Registers Infrastructure services (CQRS buses, repositories, external services).
-    /// Does NOT register handlers — use AddHandler&lt;T&gt;() or AddApplicationHandlers() separately.
-    /// </summary>
-    public static IServiceCollection AddInfrastructure(
-        this IServiceCollection services)
-    {
+        // CQRS buses
         services.AddScoped<ICommandBus, CommandBus>();
         services.AddScoped<IQueryBus, QueryBus>();
-        
+
+        // Handlers — add each explicitly (AOT-safe, compile-time verified)
+        services.AddHandler<PlaceOrderCommandHandler>();
+        services.AddHandler<GetOrderQueryHandler>();
+        // ... add more handlers here as the application grows
+
         return services;
     }
 }
@@ -224,21 +208,15 @@ using MyProject.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Register CQRS buses (ICommandBus, IQueryBus)
+// Single call — registers buses + all handlers explicitly
 builder.Services.AddInfrastructure();
-
-// Register handlers — choose one:
-// Option A: Bulk convention-based registration (scans Application assembly)
-builder.Services.AddApplicationHandlers();
-// Option B: Explicit single handler registration
-builder.Services.AddHandler<PlaceOrderCommandHandler>();
 
 var app = builder.Build();
 ```
 
-### 7. Inject Handlers in API Endpoints (API Layer)
+### 7. Inject Buses in API Endpoints (API Layer)
 
-**Critical**: API injects `ICommandHandler<>` / `IQueryHandler<>` interfaces (NOT concrete classes).
+**Critical**: API injects `ICommandBus` / `IQueryBus` — never `ICommandHandler<,>` or `IQueryHandler<,>` directly.
 
 ```csharp
 // API/Orders/OrdersEndpoints.cs
@@ -256,37 +234,42 @@ public static class OrdersEndpoints
     
     private static async Task<IResult> PlaceOrder(
         PlaceOrderCommand command,
-        ICommandHandler<PlaceOrderCommand, OrderId> handler, // ← Injected by DI
+        ICommandBus bus,
         CancellationToken cancellationToken)
     {
-        var orderId = await handler.HandleAsync(command, cancellationToken);
+        var orderId = await bus.PublishAsync<PlaceOrderCommand, OrderId>(command, cancellationToken);
         return Results.Created($"/api/orders/{orderId.Value}", orderId);
     }
     
     private static async Task<IResult> GetOrder(
         Guid orderId,
-        IQueryHandler<GetOrderQuery, OrderViewModel> handler, // ← Injected by DI
+        IQueryBus bus,
         CancellationToken cancellationToken)
     {
         var query = new GetOrderQuery(new OrderId(orderId));
-        var result = await handler.HandleAsync(query, cancellationToken);
+        var result = await bus.SendAsync<GetOrderQuery, OrderViewModel>(query, cancellationToken);
         return Results.Ok(result);
     }
 }
 ```
 
-## Convention Rules
+## Registration Rules
 
 ### MUST Follow
 
-1. **Command handlers**: Class name MUST end with `CommandHandler`
-2. **Query handlers**: Class name MUST end with `QueryHandler`
-3. **Implement interface**: Handler MUST implement `ICommandHandler<>` or `IQueryHandler<>`
-4. **Public class**: Handler class MUST be public (DI registration requires public types)
+1. **Implement interface**: Handler MUST implement `ICommandHandler<>` or `IQueryHandler<>`
+2. **Public non-abstract class**: DI registration requires public, concrete types
+3. **Scoped lifetime**: Handlers are registered as `Scoped` (one per request)
+4. **Explicit registration**: Every handler is listed in `AddInfrastructure()`. No runtime scan.
 
-### Enforced by NetArchTest
+### AOT / Trimming
 
-Naming conventions are validated by architecture tests using `NetArchTest.Rules`. See [netarchtest-rules reference](netarchtest-rules.md).
+`AddHandler<THandler>()` is AOT-safe:
+- `THandler` is statically known at the call site
+- `[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]` tells the trimmer to preserve the interface metadata for that specific type
+- No `Assembly.GetTypes()`, no runtime discovery
+
+The only constraint: **a new handler must be added to `AddInfrastructure()`** at the same time it is created. This is enforced by convention, not automation.
 
 ## Testing
 
