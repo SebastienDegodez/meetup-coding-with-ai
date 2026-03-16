@@ -14,7 +14,7 @@
     },
     "chat.hookFilesLocations": {
         ".github/hooks": true,
-        "~/.copilot/installed-plugins/superpowers-marketplace/superpowers/hooks": true,
+        // "~/.copilot/installed-plugins/superpowers-marketplace/superpowers/hooks": true,
         "~/.copilot/installed-plugins/csharp-clean-architecture-plugin/hooks": true
     }
 }
