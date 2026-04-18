@@ -115,9 +115,6 @@ For full custom tool reference, see Uncle Bob's [empire-2025 mutation testing](h
 
 ## Workflow
 
-> **Universal prerequisite — applies to every step, every scenario:**
-> Before any mutation activity (first run, CI setup, killing survivors, analyzing reports), the test suite for the affected scope must be **green**. If tests are failing, fix them first. Mutation results on a red baseline are meaningless — failing tests cannot kill mutants they already can't run.
-
 ### Step 1: Verify Prerequisites
 
 Before running mutation testing, confirm:
@@ -201,18 +198,6 @@ For each surviving mutant:
 - Logging statements removed (no observable effect)
 - Defensive null checks when value is guaranteed non-null by type
 
-**After classifying survivors, always include a targeted re-run command** scoped to the files that contain real gaps — this confirms kills after you write new tests and gives reviewers a runnable artifact:
-
-```bash
-dotnet stryker \
-  --project <YourProject.Domain.csproj> \
-  -tp <path/to/YourProject.UnitTests/YourProject.UnitTests.csproj> \
-  --mutate "**/<FileWithRealGap>.cs" \
-  --mutate "!**/*Marker.cs" --mutate "!**/DependencyInjection.cs" \
-  --break-at 100 \
-  -r cleartext
-```
-
 ### Step 5: Kill Surviving Mutants
 
 For each **real survivor** (not equivalent):
@@ -295,8 +280,6 @@ Equivalent mutants are the only legitimate exception — document them explicitl
 dotnet stryker --break-at [team-threshold]
 ```
 
-> When the CI gate fails, it means survivors remain. **Do not raise the threshold to pass — investigate each survivor first.** Classify them as real gap (write a test) or equivalent mutant (document). Only equivalent mutants are an acceptable reason to adjust the threshold.
-
 ## Integration with Outside-In TDD
 
 Mutation testing is the **third validation layer**:
@@ -355,8 +338,8 @@ dotnet tool update -g dotnet-stryker
 **On changed code only (fast — during development):**
 ```bash
 dotnet stryker \
-  --project <YourProject.Domain.csproj> \
-  -tp <path/to/YourProject.UnitTests/YourProject.UnitTests.csproj> \
+  --project MonAssurance.Domain.csproj \
+  -tp ../tests/MonAssurance.UnitTests/MonAssurance.UnitTests.csproj \
   --since:main \
   --break-at 100 \
   -r json
@@ -365,10 +348,10 @@ dotnet stryker \
 **Full business logic scope (before merge):**
 ```bash
 dotnet stryker \
-  --project <YourProject.Domain.csproj> \
-  -tp <path/to/YourProject.UnitTests/YourProject.UnitTests.csproj> \
-  --mutate "src/<YourProject>.Domain/**/*.cs" \
-  --mutate "src/<YourProject>.Application/**/*.cs" \
+  --project MonAssurance.Domain.csproj \
+  -tp ../tests/MonAssurance.UnitTests/MonAssurance.UnitTests.csproj \
+  --mutate "src/MonAssurance.Domain/**/*.cs" \
+  --mutate "src/MonAssurance.Application/**/*.cs" \
   --mutate "!**/*Marker.cs" --mutate "!**/DependencyInjection.cs" \
   --break-at 100 \
   --threshold-high 100 --threshold-low 100 \
@@ -378,8 +361,8 @@ dotnet stryker \
 **Cumulative baseline in CI (full picture + incremental speed):**
 ```bash
 dotnet stryker \
-  --project <YourProject.Domain.csproj> \
-  -tp <path/to/YourProject.UnitTests/YourProject.UnitTests.csproj> \
+  --project MonAssurance.Domain.csproj \
+  -tp ../tests/MonAssurance.UnitTests/MonAssurance.UnitTests.csproj \
   --with-baseline:main \
   --break-at 100 \
   -r json
@@ -388,10 +371,9 @@ dotnet stryker \
 **Scope to a specific file or feature (debug a survivor):**
 ```bash
 dotnet stryker \
-  --project <YourProject.Domain.csproj> \
-  -tp <path/to/YourProject.UnitTests/YourProject.UnitTests.csproj> \
-  --mutate "**/<TargetFile>.cs" \
-  --mutate "!**/*Marker.cs" --mutate "!**/DependencyInjection.cs" \
+  --project MonAssurance.Domain.csproj \
+  -tp ../tests/MonAssurance.UnitTests/MonAssurance.UnitTests.csproj \
+  --mutate "**/EligibilityPolicy.cs" \
   --break-at 100 \
   -r cleartext
 ```
