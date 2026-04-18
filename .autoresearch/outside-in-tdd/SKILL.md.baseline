@@ -14,7 +14,7 @@ Start from observable behavior (Gherkin), let design emerge from tests.
 
 ## Outside-In Approach
 
-**Prerequisite:** Gherkin scenarios must be written and approved before this skill applies. This includes new features, bug fixes, and behavior-changing refactoring. If Gherkin scenarios are already approved for the current task, proceed directly to Step 1 — gherkin-gate is already done.
+**Prerequisite:** Gherkin scenarios must be written and approved before this skill applies.
 **REQUIRED SUB-SKILL:** `superpowers-whetstone:gherkin-gate` — run first, wait for approval, then return here.
 
 ### Step 1: Map Scenario to Acceptance Test
@@ -24,19 +24,11 @@ Start from observable behavior (Gherkin), let design emerge from tests.
 
 ### Step 2: Let Domain Emerge
 
-**STOP. Do NOT create any domain class, value object, entity, policy, or enum before your first test fails to compile.** Design MUST emerge from red — not from upfront thinking. Even if you already know the domain from context, create nothing until the test's compilation failure confirms what's needed. This includes adding 'just a new variant' of something that already exists: a new vehicle type, a new rejection reason, a new value object field, or a new boundary value — even if similar ones already exist in the codebase. Wait for the test's compilation failure before creating the new type.
-
 Test failures reveal the domain you need. Let the design emerge from failing tests — don't design upfront.
 - Domain objects (policies, value objects, services) emerge from what the test demands
 - Orchestrators only coordinate — domain logic lives in the domain
 - Real domain objects (not mocked)
 - No design upfront — the test tells you what to build
-
-### Step 3: Verify with Mutation Testing
-
-Once both acceptance and domain test streams are green:
-
-**REQUIRED SUB-SKILL:** `superpowers-whetstone:mutation-testing` — run NOW, before merge. 100% on business logic, equivalent mutants are the only accepted survivors. This applies to ALL changes — not just new features. Bug fixes, refactoring, and edge case additions must also pass mutation testing if any test was written or changed to make this work.
 
 ## Acceptance-Style Tests (Sociable — Entry Point Level)
 
@@ -72,7 +64,7 @@ public void WhenUserIsUnderMinimumAge_ShouldBeRejected()
 {
     var policy = new EligibilityPolicy();
     var user = new UserInfo(Age: 17, YearsOfExperience: 0);
-    var resource = new ResourceInfo(Type: "standard", Age: 1);
+    var resource = new ResourceInfo(Type: "standard", Age: 1));
 
     var result = policy.Evaluate(user, resource);
 
@@ -139,7 +131,6 @@ After both test streams are green, verify test effectiveness with mutation testi
 | Polluting Gherkin with class/endpoint names | Keep scenarios in business language only |
 | Testing data structures directly by default | Test policies/rules; data types are covered by usage |
 | Skipping mutation testing before merge | Run mutation-testing skill after tests green |
-| Skipping Gherkin for a bug fix | Always write a failing Gherkin scenario that reproduces the bug before fixing it — gherkin-gate applies to bug fixes too |
 
 ## Integration
 
@@ -151,4 +142,3 @@ After both test streams are green, verify test effectiveness with mutation testi
 - [test-examples.md](references/test-examples.md) - Examples of both Acceptance and Domain tests.
 - [testing-strategy.md](references/testing-strategy.md) - Detailed explanation of the testing pyramid and strategy.
 - [cqrs-patterns.md](references/cqrs-patterns.md) - CQRS architecture references.
-

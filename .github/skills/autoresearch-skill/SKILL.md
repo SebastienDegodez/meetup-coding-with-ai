@@ -1,13 +1,13 @@
 ---
 name: autoresearch-skill
-description: "Autonomously optimize any Claude Code skill by running it repeatedly, scoring outputs against binary evals, mutating the prompt, and keeping improvements. Based on Karpathy's autoresearch methodology. Use when: optimize this skill, improve this skill, run autoresearch on, make this skill better, self-improve skill, benchmark skill, eval my skill, run evals on. Outputs: an improved SKILL.md, a results log, and a changelog of every mutation tried."
+description: "Autonomously optimize any Github Copilot skill by running it repeatedly, scoring outputs against binary evals, mutating the prompt, and keeping improvements. Based on Karpathy's autoresearch methodology. Use when: optimize this skill, improve this skill, run autoresearch on, make this skill better, self-improve skill, benchmark skill, eval my skill, run evals on. Outputs: an improved SKILL.md, a results log, and a changelog of every mutation tried."
 ---
 
 # Autoresearch for Skills
 
 Most skills work about 70% of the time. The other 30% you get garbage. The fix isn't to rewrite the skill from scratch. It's to let an agent run it dozens of times, score every output, and tighten the prompt until that 30% disappears.
 
-This skill adapts Andrej Karpathy's autoresearch methodology (autonomous experimentation loops) to Claude Code skills. Instead of optimizing ML training code, we optimize skill prompts.
+This skill adapts Andrej Karpathy's autoresearch methodology (autonomous experimentation loops) to Github Copilot skills. Instead of optimizing ML training code, we optimize skill prompts.
 
 ---
 
@@ -38,22 +38,19 @@ Take any existing skill, define what "good output" looks like as binary yes/no c
 
 ---
 
-## step 1: read the skill — then start the dashboard immediately
+## step 0: start the dashboard FIRST — before anything else
 
-Before changing anything, read and understand the target skill completely.
+**This is the very first action. Not step 2. Not after reading. NOW.**
 
-1. Read the full SKILL.md file
-2. Read any files in `references/` that the skill links to
-3. Identify the skill's core job, process steps, and output format
-4. Note any existing quality checks or anti-patterns already in the skill
-
-Do NOT skip this. You need to understand what the skill does before you can improve it.
-
-**IMMEDIATELY after reading — before building evals, before baseline, before anything else:**
+Do not read the skill. Do not gather context. Do not ask questions. Do not build evals.  
+**Start the dashboard server first. Then do everything else.**
 
 1. Create `.autoresearch/[skill-name]/` at the repo root
-2. Create an initial `results.json` with `"status": "preparing"` and an empty `experiments` array
-3. Create `dashboard.html` (full version from step 3 below)
+2. Create a minimal `results.json` with `"status": "preparing"` and an empty `experiments` array:
+   ```json
+   { "skill_name": "[skill-name]", "status": "preparing", "current_experiment": 0, "baseline_score": 0, "best_score": 0, "experiments": [], "eval_breakdown": [] }
+   ```
+3. Create an initial `dashboard.html` (full version from step 3 below — or a placeholder that auto-refreshes)
 4. Start the server and open the browser NOW:
 
 ```bash
@@ -61,7 +58,22 @@ python3 -m http.server 8742 --directory .autoresearch/[skill-name] &
 sleep 1 && open "http://localhost:8742/dashboard.html"
 ```
 
-The user is waiting to see the dashboard. Do not delay this for any reason.
+**Only after the browser is open:** proceed to step 1 below.
+
+The user is watching. They want to see the dashboard load before you do any work. This is non-negotiable.
+
+---
+
+## step 1: read the skill
+
+After the dashboard is live, read and understand the target skill completely.
+
+1. Read the full SKILL.md file
+2. Read any files in `references/` that the skill links to
+3. Identify the skill's core job, process steps, and output format
+4. Note any existing quality checks or anti-patterns already in the skill
+
+Do NOT skip this. You need to understand what the skill does before you can improve it.
 
 ---
 
@@ -97,7 +109,7 @@ Example: 4 evals × 5 runs = max score of 20.
 
 ## step 3: generate the live dashboard
 
-The dashboard and server were already started in step 1. At this point, update `dashboard.html` with the eval criteria and update `results.json` to `"status": "running"`. The user can already see the dashboard in their browser.
+The dashboard and server were already started in **step 0**. At this point, update `dashboard.html` with the eval criteria and update `results.json` to `"status": "running"`. The user can already see the dashboard in their browser.
 
 The dashboard must:
 - Auto-refresh every 10 seconds (reads from results.tsv)
