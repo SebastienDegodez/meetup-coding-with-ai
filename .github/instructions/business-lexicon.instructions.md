@@ -17,6 +17,12 @@ Hard rule:
 | Français | English | Notes |
 | --- | --- | --- |
 | éligibilité | eligibility | Main business capability |
+| conducteur | driver | Domain entity |
+| véhicule | vehicle | Domain entity |
+| puissance | power | Engine power in hp; "high-power motorcycle" when > 100 hp |
+| motif de refus | rejection reason | Reason returned when eligibility is refused |
+| trottinette électrique | electric scooter | Vehicle type with lower minimum age (16) |
+| expérience insuffisante | insufficient experience | Rejection reason for high-power motorcycle with < 5 years license |
 
 
 ## Update Checklist
