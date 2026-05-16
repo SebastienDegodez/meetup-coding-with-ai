@@ -18,9 +18,8 @@ public class EligibilityPolicyTests
 
         var result = _policy.Evaluate(driver, vehicle, Today);
 
-        result.Match(
-            onAccepted: () => true,
-            onRefused: _ => throw new Exception("Expected Accepted"));
+        var wasAccepted = result.Match(onAccepted: () => true, onRefused: _ => false);
+        Assert.True(wasAccepted);
     }
 
     [Fact]
@@ -31,13 +30,11 @@ public class EligibilityPolicyTests
 
         var result = _policy.Evaluate(driver, vehicle, Today);
 
-        result.Match(
-            onAccepted: () => throw new Exception("Expected Refused"),
-            onRefused: reason =>
-            {
-                Assert.Equal("Conducteur trop jeune pour ce véhicule", reason);
-                return true;
-            });
+        var (wasAccepted, capturedReason) = result.Match(
+            onAccepted: () => (true, (string?)null),
+            onRefused: r => (false, (string?)r));
+        Assert.False(wasAccepted);
+        Assert.Equal("Conducteur trop jeune pour ce véhicule", capturedReason);
     }
 
     [Fact]
@@ -48,9 +45,8 @@ public class EligibilityPolicyTests
 
         var result = _policy.Evaluate(driver, vehicle, Today);
 
-        result.Match(
-            onAccepted: () => true,
-            onRefused: _ => throw new Exception("Expected Accepted"));
+        var wasAccepted = result.Match(onAccepted: () => true, onRefused: _ => false);
+        Assert.True(wasAccepted);
     }
 
     [Fact]
@@ -61,13 +57,11 @@ public class EligibilityPolicyTests
 
         var result = _policy.Evaluate(driver, vehicle, Today);
 
-        result.Match(
-            onAccepted: () => throw new Exception("Expected Refused"),
-            onRefused: reason =>
-            {
-                Assert.Equal("Conducteur trop jeune pour ce véhicule", reason);
-                return true;
-            });
+        var (wasAccepted, capturedReason) = result.Match(
+            onAccepted: () => (true, (string?)null),
+            onRefused: r => (false, (string?)r));
+        Assert.False(wasAccepted);
+        Assert.Equal("Conducteur trop jeune pour ce véhicule", capturedReason);
     }
 
     // ── Power boundaries ─────────────────────────────────────────────────────
@@ -80,9 +74,8 @@ public class EligibilityPolicyTests
 
         var result = _policy.Evaluate(driver, vehicle, Today);
 
-        result.Match(
-            onAccepted: () => true,
-            onRefused: _ => throw new Exception("Expected Accepted"));
+        var wasAccepted = result.Match(onAccepted: () => true, onRefused: _ => false);
+        Assert.True(wasAccepted);
     }
 
     [Fact]
@@ -93,13 +86,11 @@ public class EligibilityPolicyTests
 
         var result = _policy.Evaluate(driver, vehicle, Today);
 
-        result.Match(
-            onAccepted: () => throw new Exception("Expected Refused"),
-            onRefused: reason =>
-            {
-                Assert.Equal("Expérience insuffisante pour la puissance", reason);
-                return true;
-            });
+        var (wasAccepted, capturedReason) = result.Match(
+            onAccepted: () => (true, (string?)null),
+            onRefused: r => (false, (string?)r));
+        Assert.False(wasAccepted);
+        Assert.Equal("Expérience insuffisante pour la puissance", capturedReason);
     }
 
     // ── Experience boundaries ─────────────────────────────────────────────────
@@ -112,9 +103,8 @@ public class EligibilityPolicyTests
 
         var result = _policy.Evaluate(driver, vehicle, Today);
 
-        result.Match(
-            onAccepted: () => true,
-            onRefused: _ => throw new Exception("Expected Accepted"));
+        var wasAccepted = result.Match(onAccepted: () => true, onRefused: _ => false);
+        Assert.True(wasAccepted);
     }
 
     [Fact]
@@ -125,13 +115,11 @@ public class EligibilityPolicyTests
 
         var result = _policy.Evaluate(driver, vehicle, Today);
 
-        result.Match(
-            onAccepted: () => throw new Exception("Expected Refused"),
-            onRefused: reason =>
-            {
-                Assert.Equal("Expérience insuffisante pour la puissance", reason);
-                return true;
-            });
+        var (wasAccepted, capturedReason) = result.Match(
+            onAccepted: () => (true, (string?)null),
+            onRefused: r => (false, (string?)r));
+        Assert.False(wasAccepted);
+        Assert.Equal("Expérience insuffisante pour la puissance", capturedReason);
     }
 
     // ── Null power ─────────────────────────────────────────────────────────────
@@ -144,8 +132,7 @@ public class EligibilityPolicyTests
 
         var result = _policy.Evaluate(driver, vehicle, Today);
 
-        result.Match(
-            onAccepted: () => true,
-            onRefused: _ => throw new Exception("Expected Accepted"));
+        var wasAccepted = result.Match(onAccepted: () => true, onRefused: _ => false);
+        Assert.True(wasAccepted);
     }
 }
