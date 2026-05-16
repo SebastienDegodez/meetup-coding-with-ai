@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using MonAssurance.Application.Shared;
 using MonAssurance.Application;
+using MonAssurance.Application.Eligibility.Queries.CheckEligibility;
+using MonAssurance.Domain.Eligibility;
 using MonAssurance.Infrastructure.CQRS;
 
 namespace MonAssurance.Infrastructure;
@@ -71,6 +73,10 @@ public static class DependencyInjection
         // Register CQRS buses
         services.AddScoped<ICommandBus, CommandBus>();
         services.AddScoped<IQueryBus, QueryBus>();
+
+        // Register eligibility services
+        services.AddSingleton<EligibilityPolicy>();
+        services.AddScoped<CheckEligibilityQueryHandler>();
         
         return services;
     }
