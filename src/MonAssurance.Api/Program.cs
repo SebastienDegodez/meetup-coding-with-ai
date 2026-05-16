@@ -4,6 +4,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddInfrastructure();
+builder.Services.AddSingleton(TimeProvider.System);
 
 // Add Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
