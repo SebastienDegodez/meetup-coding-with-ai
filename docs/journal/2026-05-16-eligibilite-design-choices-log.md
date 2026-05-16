@@ -1,0 +1,225 @@
+# Journal des choix de design — Éligibilité
+
+**Date :** 2026-05-16  
+**Contexte :** Session de design pour la fonctionnalité d'éligibilité (assurance auto). Ce journal documente uniquement les choix qui ont nécessité une délibération. Les conventions triviales sont listées en tête de document et n'apparaissent pas dans les décisions.
+
+---
+
+## Conventions retenues (non débattues)
+
+Les points suivants ont été appliqués sans délibération : ils découlent directement des skills chargés ou du standard .NET 10.
+
+- **CQS sans bus** — règle explicite du skill `clean-architecture-dotnet` : *"< 3 use cases, pas de cross-cutting pipeline → pas de bus"*
+- **`TimeProvider`** — abstraction standard .NET 8+, aucune alternative légitime sur .NET 10 ; `FakeTimeProvider` fourni par `Microsoft.Extensions.TimeProvider.Testing`
+- **Nommage `*QueryHandler` / `*Query` / `*ViewModel`** — conséquence naturelle de la convention CQS ; rend explicite la nature lecture vs écriture de chaque cas d'usage
+- **Object Calisthenics (9 règles)** — instruction projet `.github/instructions/object-calisthenics.instructions.md` présente dès le départ (`applyTo: **/*.{cs,ts,java}`). Non chargée par l'assistant en début de session — l'utilisateur a dû la rappeler explicitement. Conséquence : `Driver` et `Vehicle` sont des classes comportementales (pas des records), `EligibilityResult` utilise `Match<T>` (voir Choix 4)
+- **Skills chargés :** `clean-architecture-dotnet`, `clean-architecture-testing`, `outside-in-tdd`
+
+---
+
+## Choix 1 — Modèle de réponse
+
+> **Question :** Quelle structure retourner en réponse à une évaluation d'éligibilité ?
+
+| Option | Description | Statut |
+|--------|-------------|--------|
+| A | Résultat simple : `{ isEligible: bool, rejectionReason: string? }` | ✅ Choisi |
+| B | Résultat enrichi : résultat global + détail de chaque règle évaluée | ❌ Rejeté |
+| C | Résultat avec audit trail : résultat + règles + timestamp + version des règles | ❌ Rejeté |
+
+---
+
+### Option A — Résultat simple
+
+**Explication :** Retourne uniquement un booléen `isEligible` et, en cas de refus, le motif sous forme de chaîne optionnelle `rejectionReason`. Le contrat est minimal et auto-explicatif.
+
+- ✅ Simple à implémenter et à consommer côté frontend
+- ✅ Contrat minimal — pas de couplage fort sur la structure interne des règles
+- ✅ Évolutif : on peut enrichir plus tard sans casser les consommateurs existants
+- ❌ Ne permet pas d'inspecter quelles règles ont été évaluées et pourquoi
+
+---
+
+### Option B — Résultat enrichi
+
+**Explication :** Retourne le résultat global (`isEligible`) ainsi que la liste de toutes les règles évaluées avec leur verdict individuel (ex : `{ ruleName: "AgeMinimum", passed: false }`).
+
+- ✅ Utile pour le debugging, les logs, et un affichage détaillé côté UI
+- ✅ Permet à l'appelant de comprendre précisément ce qui a bloqué
+- ❌ Complexifie le contrat de réponse — le consommateur doit comprendre la structure interne des règles
+- ❌ Sur-ingénierie pour le besoin actuel : le frontend n'a pas besoin du détail règle par règle
+
+---
+
+### Option C — Résultat avec audit trail
+
+**Explication :** Ajoute une traçabilité complète de la décision : résultat, règles évaluées, timestamp de la décision et version du référentiel de règles appliqué. Répond à des exigences de compliance ou d'audit réglementaire.
+
+- ✅ Nécessaire pour des contextes réglementaires stricts (ex : assurance soumise à obligation d'explication)
+- ✅ Permet de rejouer ou de contester une décision a posteriori
+- ❌ Prématuré : ajoute de la persistance et de la complexité non demandées à ce stade
+- ❌ Implique des décisions de stockage et de rétention qui sortent du scope de la feature
+
+---
+
+> **Recommandation :** **Option A** — répond au besoin sans complexité inutile. L'option B peut être envisagée si un besoin de debugging en production émerge. L'option C est à réserver à un contexte réglementaire explicite.
+
+---
+
+## Choix 2 — Surface API
+
+> **Question :** Quel verbe HTTP et quelle structure d'URL pour exposer l'évaluation d'éligibilité ?
+
+| Option | Description | Statut |
+|--------|-------------|--------|
+| A | `POST /eligibility` avec payload JSON | ✅ Choisi |
+| B | `GET /eligibility?age=18&vehicule=Voiture` | ❌ Rejeté |
+| C | Pas d'API — uniquement domaine et tests | ⬜ Non retenu |
+
+---
+
+### Option A — `POST /eligibility` avec payload JSON
+
+**Explication :** Un seul endpoint `POST` qui reçoit toutes les données du conducteur et du véhicule dans le corps de la requête en JSON (ex : `{ "driverBirthDate": "2008-01-01", "vehicleType": "Car" }`).
+
+- ✅ Payload structuré et extensible — on peut ajouter des champs sans changer l'URL
+- ✅ Données sensibles (date de naissance) non exposées dans l'URL ni dans les logs serveur — conformité RGPD
+- ✅ Aligné sur la sémantique REST pour une opération d'évaluation (action métier, pas une ressource CRUD)
+- ✅ Taille de payload non limitée contrairement aux query strings
+- ❌ Sémantiquement discutable au sens RESTful strict : un `POST` implique généralement un effet de bord persistant
+
+---
+
+### Option B — `GET /eligibility?age=18&vehicule=Voiture`
+
+**Explication :** Les paramètres d'entrée sont passés en query string, ce qui est idiomatique pour une opération de lecture sans effet de bord.
+
+- ✅ RESTful pur pour une opération sans effet de bord — idempotent par nature
+- ✅ Facile à appeler depuis un navigateur ou un outil de test sans corps de requête
+- ❌ Données personnelles (date de naissance) visibles dans l'URL, les logs, l'historique du navigateur → problème de confidentialité (RGPD)
+- ❌ Limite de taille des query strings selon les serveurs et proxies
+- ❌ Moins extensible : ajouter un champ structuré (ex : liste de conducteurs) devient compliqué
+
+---
+
+### Option C — Pas d'API
+
+**Explication :** Implémenter uniquement la logique métier (Domain + Application) sans exposer de couche HTTP. Utile pour valider le design du domaine avant de s'engager sur une surface API.
+
+- ✅ Focalise sur le domain-first — idéal pour une première itération TDD
+- ✅ Évite les décisions prématurées sur l'API
+- ❌ Insuffisant pour un contexte d'intégration réel — un consommateur doit pouvoir appeler le service
+- ❌ Retarde l'intégration et les tests end-to-end
+
+---
+
+> **Recommandation :** **Option A** — `POST` évite l'exposition de données personnelles dans l'URL et offre un payload extensible. La légère entorse à la pureté REST est acceptable pour des raisons de sécurité et de conformité RGPD.
+
+---
+
+## Choix 3 — Approche architecturale
+
+> **Décision guidée par la skill `clean-architecture-dotnet`** — pas de délibération.
+
+Le skill énonce sans ambiguïté : *"Business rules belong in Domain."* Les options A (règles dans Application) et C (Value Objects auto-validants) sont toutes deux exclues par deux règles explicites du skill :
+- Option A rejetée : *"If domain has business rules → they belong in Domain, not Application"*
+- Option C rejetée : *"If you never need `if (condition) throw` to protect state → plain `sealed record`, not DDD"*
+
+**Option B retenue directement** : `EligibilityPolicy` (domain service pur) + `CheckEligibilityQueryHandler` (orchestrateur Application).
+
+| Option | Description | Statut |
+|--------|-------------|--------|
+| A | Règles dans Application, Domain = données pures | ❌ Exclu par la skill |
+| B | `EligibilityPolicy` Domain Service + `CheckEligibilityQueryHandler` | ✅ Retenu par la skill |
+| C | Value Objects auto-validants avec factory methods | ❌ Exclu par la skill |
+
+---
+
+## Choix 4 — Design de `EligibilityResult`
+
+Ce choix est apparu après l'introduction de la contrainte Object Calisthenics. Les positions des auteurs de référence ont été consultées pour trancher entre les options.
+
+> **Question :** La règle 9 Object Calisthenics (no getters/setters, Tell Don't Ask) exclut d'exposer l'état d'`EligibilityResult` via des propriétés directes. Quel pattern utiliser pour qu'`EligibilityPolicy` communique son résultat à la couche Application — et comment l'Application branche-t-elle sur accepté / refusé — sans que le Domain expose son état interne ?
+
+| Option | Description | Statut |
+|--------|-------------|--------|
+| A | Propriétés `get`-only (`IsEligible`, `RejectionReason`) | ⬜ Acceptable (Vernon) |
+| B | Pattern `Match<T>` — zéro getter, branchement délégué | ✅ Choisi |
+| C | Domain Exception (`EligibilityRefusedException`) | ❌ Rejeté |
+| D | `EligibilityResult` déplacé dans Application | ⬜ Non retenu |
+
+---
+
+### Option A — Propriétés `get`-only
+
+**Explication :** Exposer `IsEligible` et `RejectionReason` en lecture seule — style Vaughn Vernon. L'Application lit l'état du résultat et branche en conséquence (`if (result.IsEligible) ...`).
+
+- ✅ Familier, idiomatique C#, acceptable per DDD Vernon
+- ✅ Aucune connaissance de patterns fonctionnels requise par l'équipe
+- ❌ L'Application lit l'état du Domain (`if result.IsEligible`) → viole Object Calisthenics et "Tell, Don't Ask"
+- ❌ Le branchement `if/else` dans le handler duplique implicitement la logique du résultat
+
+---
+
+### Option B — Pattern `Match<T>` ✅
+
+**Explication :** `EligibilityResult` expose `Match<T>(Func<T> onAccepted, Func<string, T> onRefused)`. L'appelant fournit les deux branches, le Domain choisit laquelle exécuter. L'état reste totalement encapsulé.
+
+- ✅ Zéro getter sur les objets Domain — état totalement encapsulé
+- ✅ Point de convergence entre Object Calisthenics, Uncle Bob (Output Boundary) et Railway Oriented Programming
+- ✅ L'Application ne lit jamais l'état du Domain — le Domain pilote le branchement
+- ❌ Moins familier pour des équipes non habituées au style fonctionnel
+
+---
+
+### Option C — Domain Exception
+
+**Explication :** `EligibilityPolicy.Evaluate()` lève `EligibilityRefusedException(reason)` en cas de refus, retourne `void` si accepté. Zéro result type, zéro getter.
+
+- ✅ Zéro getter, zéro result type — le plus simple à implémenter
+- ❌ Anti-pattern : utiliser les exceptions pour du flow métier normal (les exceptions sont pour les cas exceptionnels, pas les refus d'éligibilité)
+- ❌ Cache le refus dans le mécanisme d'exception — invisible dans la signature de la méthode
+
+---
+
+### Option D — `EligibilityResult` dans Application
+
+**Explication :** Le Domain retourne un type primitif (`string?` ou `enum`) et c'est la couche Application qui encapsule ce résultat dans un objet `EligibilityResult`.
+
+- ✅ Domain encore plus pur — aucun objet résultat à maintenir
+- ❌ Le motif de refus remonte du Domain sous forme de primitif — perd l'expressivité
+- ❌ La distinction accepté/refusé n'est plus portée par le type — retour à un booléen déguisé
+
+---
+
+#### Références consultées pour ce choix
+
+> Positions des auteurs de référence sur les getters et les result types, ayant influencé ce choix.
+
+| Auteur | Position sur les getters / result types |
+|--------|-----------------------------------------|
+| Vaughn Vernon | Propriétés `get`-only acceptables sur les Value Objects — encapsulation suffisante si l'état ne fuit pas en dehors du Domain |
+| Uncle Bob (Robert C. Martin) | Output Boundary / Presenter — le use case appelle une interface de présentation, ne retourne pas de données brutes ; `Match` est l'équivalent inline de ce principe |
+| Greg Young / Udi Dahan | Domain Events pour le write side uniquement ; les queries retournent des DTOs directs sans logique — pas de position sur les getters dans les résultats de policy |
+| Object Calisthenics (Jeff Bay) | Règle 9 : no getters/setters → Tell Don't Ask. L'objet expose un comportement, pas son état. `Match<T>` est une application possible de ce principe, mais non prescrite par la règle elle-même. |
+
+**Conclusion :** `Match` est compatible avec l'ensemble de ces positions et constitue le point de convergence le plus rigoureux pour un contexte Object Calisthenics + Clean Architecture.
+
+> **Recommandation :** **Option B** — le `Match` est le pont le plus propre entre Domain et Application sans getter. Compatible avec tous les styles de référence (tableau ci-dessus).
+
+---
+
+## Choix 5 — Stratégie de test
+
+> **Décision guidée par la skill `clean-architecture-testing`** — application directe d'un critère.
+
+Le skill pose : *"Extract a Domain test ONLY when a business rule has a large edge-case matrix AND is extracted into a reusable Policy / Domain Service."*
+
+`EligibilityPolicy` remplit les deux conditions :
+- Policy extraite dans le Domain ✅
+- Matrice de cas complexe : 3 règles indépendantes, valeurs limites multiples (16/18 ans selon véhicule, 100/101 ch, 5 ans de permis), ≥ 12 scénarios Gherkin ✅
+
+**Décision appliquée directement** :
+- Tests Domain sur `EligibilityPolicy` (critère rempli)
+- Tests Application via `CheckEligibilityQueryHandler` + `FakeTimeProvider` (scénarios représentatifs d'orchestration)
+- `Driver` et `Vehicle` non testés isolément — couverts par les tests d'`EligibilityPolicy`
