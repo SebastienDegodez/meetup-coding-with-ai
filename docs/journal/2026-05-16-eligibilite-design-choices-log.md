@@ -286,6 +286,10 @@ Spec approuvée sans réserve.
 | 4 — boundary âge (Car/Motorcycle 17yo, ElectricScooter 15yo/16yo) | ✅ DONE | `5683f6a` | `5 passed, 0 failed` |
 | 5 — règle moto puissante (RED→GREEN) | ✅ DONE | `ae78bd0` | RED: `7 passed, 1 failed` → GREEN: `8 passed, 0 failed` |
 | 6 — boundary values Domain (`EligibilityPolicy`) | ✅ DONE | `0e1926c` | `17 passed, 0 failed` — 9 nouveaux tests, zéro nouveau code |
+| 7 — checkpoint Application layer | ✅ DONE | — | Fichiers conformes à la spec, aucune correction. `17 passed` |
+| 8 — DI registration | ✅ DONE | `5bc4c12` | `Build succeeded. 0 Error(s)` — `EligibilityPolicy`, `CheckEligibilityQueryHandler`, `TimeProvider.System` |
+| 10 — test integration POST /eligibility [RED] | 🔴 RED | `8b757a0` | `Expected: OK — Actual: NotFound` — endpoint absent, test commit avant implémentation |
+| 9+10 — endpoint GREEN + fix archi test | ✅ DONE | `49a1d45` | `9 passed, 0 failed` — `EligibilityEndpoints.cs` + règle architecture corrigée |
 
 
 ### Task 4 - Driver.Age() — avant / après
@@ -338,3 +342,21 @@ var (wasAccepted, capturedReason) = result.Match(
 Assert.False(wasAccepted);
 Assert.Equal("Conducteur trop jeune pour ce véhicule", capturedReason);
 ```
+
+### Task 8 — DI : pourquoi ces scopes ?
+
+`EligibilityPolicy` → `AddSingleton` : service Domain stateless, aucun état mutable, un seul objet pour toute l'app suffit.  
+`CheckEligibilityQueryHandler` → `AddScoped` : reçoit `TimeProvider` en injection, scope cohérent avec le cycle HTTP.  
+`TimeProvider.System` → `AddSingleton` : une horloge système par app. En tests, remplacée par `FakeTimeProvider`.
+
+### Task 10 — RED avant Task 9 (endpoint) : TDD appliqué
+
+Session précédente avait Task 9 (endpoint) avant Task 10 (test). Utilisateur a corrigé. On a fait `git reset --hard 5bc4c12` pour revenir à l'état après Task 8. Ordre correct :
+1. Test créé → `8b757a0` [RED] : `Expected: OK — Actual: NotFound` (404, route absente)
+2. Endpoint implémenté → `49a1d45` [GREEN] : `9 passed, 0 failed`
+
+### Détection d'un bug dans `CleanArchitectureTests.cs`
+
+Test préexistant `Api_ShouldNotHaveDependencyOn_Application` supposait un design CQRS avec mediator (où l'API n'importe jamais les handlers). Notre design : CQS sans bus = handlers injectés directement dans les endpoints. L'API référence `CheckEligibilityQueryHandler` par construction.
+
+Règle incorrecte. Règle correcte : API ne doit pas dépendre du **Domain directement** (doit passer par Application). API → Application → Domain est la chaîne normale. Test renommé `Api_ShouldNotHaveDependencyOn_Domain_Directly`.
