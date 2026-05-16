@@ -31,4 +31,68 @@ public class CheckEligibilityQueryHandlerTests
         Assert.True(result.IsEligible);
         Assert.Null(result.RejectionReason);
     }
+
+    [Fact]
+    public void Handle_WhenDriverIs17AndHasCar_ReturnsRefused()
+    {
+        var handler = BuildHandler(Today);
+        var query = new CheckEligibilityQuery(
+            DateOfBirth: Today.AddYears(-17),
+            VehicleType: VehicleType.Car,
+            Power: null,
+            LicenseYears: 1);
+
+        var result = handler.Handle(query);
+
+        Assert.False(result.IsEligible);
+        Assert.Equal("Conducteur trop jeune pour ce véhicule", result.RejectionReason);
+    }
+
+    [Fact]
+    public void Handle_WhenDriverIs17AndHasMotorcycle_ReturnsRefused()
+    {
+        var handler = BuildHandler(Today);
+        var query = new CheckEligibilityQuery(
+            DateOfBirth: Today.AddYears(-17),
+            VehicleType: VehicleType.Motorcycle,
+            Power: null,
+            LicenseYears: 1);
+
+        var result = handler.Handle(query);
+
+        Assert.False(result.IsEligible);
+        Assert.Equal("Conducteur trop jeune pour ce véhicule", result.RejectionReason);
+    }
+
+    [Fact]
+    public void Handle_WhenDriverIs15AndHasElectricScooter_ReturnsRefused()
+    {
+        var handler = BuildHandler(Today);
+        var query = new CheckEligibilityQuery(
+            DateOfBirth: Today.AddYears(-15),
+            VehicleType: VehicleType.ElectricScooter,
+            Power: null,
+            LicenseYears: 0);
+
+        var result = handler.Handle(query);
+
+        Assert.False(result.IsEligible);
+        Assert.Equal("Conducteur trop jeune pour ce véhicule", result.RejectionReason);
+    }
+
+    [Fact]
+    public void Handle_WhenDriverIs16AndHasElectricScooter_ReturnsEligible()
+    {
+        var handler = BuildHandler(Today);
+        var query = new CheckEligibilityQuery(
+            DateOfBirth: Today.AddYears(-16),
+            VehicleType: VehicleType.ElectricScooter,
+            Power: null,
+            LicenseYears: 0);
+
+        var result = handler.Handle(query);
+
+        Assert.True(result.IsEligible);
+        Assert.Null(result.RejectionReason);
+    }
 }
