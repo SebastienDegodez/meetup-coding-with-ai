@@ -284,6 +284,7 @@ Spec approuvée sans réserve.
 | 2 — Domain + Application skeleton | ✅ DONE | `387c79d` | `Assert.True() Failure — Expected: True / Actual: False` — compilation OK, assertion RED confirmé |
 | 3 — règle âge minimum (GREEN) | ✅ DONE | `bc6cabd` | `1 passed, 0 failed` |
 | 4 — boundary âge (Car/Motorcycle 17yo, ElectricScooter 15yo/16yo) | ✅ DONE | `5683f6a` | `5 passed, 0 failed` |
+| 5 — règle moto puissante (RED→GREEN) | ✅ DONE | `ae78bd0` | RED: `7 passed, 1 failed` → GREEN: `8 passed, 0 failed` |
 
 ### Driver.Age() — avant / après
 
