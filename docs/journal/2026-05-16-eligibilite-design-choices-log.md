@@ -282,5 +282,26 @@ Spec approuvée sans réserve.
 | 0 — setup `FakeTimeProvider` | ✅ DONE | `a66fd35` | `Build succeeded. 0 Error(s)` — package v10.6.0 |
 | 1 — premier test acceptance (RED) | ✅ DONE | `4fcae4c` | `CS0234: The type or namespace name 'CheckEligibilityQueryHandler' could not be found` — compile error confirmé |
 | 2 — Domain + Application skeleton | ✅ DONE | `387c79d` | `Assert.True() Failure — Expected: True / Actual: False` — compilation OK, assertion RED confirmé |
+| 3 — règle âge minimum (GREEN) | ✅ DONE | `bc6cabd` | `1 passed, 0 failed` |
+| 4 — boundary âge (Car/Motorcycle 17yo, ElectricScooter 15yo/16yo) | ✅ DONE | `5683f6a` | `5 passed, 0 failed` |
+
+### Driver.Age() — avant / après
+
+Stub → implémentation réelle. Formule : années civiles complètes. Si anniversaire pas encore passé cette année, soustrait 1.
+
+```csharp
+// ❌ Avant (stub Task 2)
+public int Age(DateOnly today) => 0;
+
+// ✅ Après (Task 3)
+public int Age(DateOnly today)
+{
+    var age = today.Year - _dateOfBirth.Year;
+    if (today < _dateOfBirth.AddYears(age)) age--;
+    return age;
+}
+```
+
+Exemple boundary : `today = 2026-01-01`, `dob = 2008-01-01` → `age = 18` (anniversaire aujourd'hui = 18 ans révolus → éligible). `dob = 2008-01-02` → `age = 17` → refusé.
 
 
