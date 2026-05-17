@@ -419,3 +419,9 @@ FodyWeavers.xsd
 
 # Git worktrees
 .worktrees/
+
+# APM dependencies
+apm_modules/
+
+# Design exploration / previews
+.ecc-design/
