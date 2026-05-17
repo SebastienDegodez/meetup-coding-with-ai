@@ -1,0 +1,22 @@
+lockfile_version: '1'
+generated_at: '2026-05-16T22:36:32.872713+00:00'
+apm_version: 0.12.4
+dependencies:
+- repo_url: affaan-m/everything-claude-code
+  host: github.com
+  resolved_commit: 6d130cfcd5d06b42c7eb30be8e109cfa87fde197
+  virtual_path: .agents/skills/frontend-slides
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/frontend-slides
+  content_hash: sha256:0ca7a9d3bcd02382b0e0c1339a98fbc39c5370d4ed494e7c008643d99d57d777
+- repo_url: affaan-m/everything-claude-code
+  host: github.com
+  resolved_commit: 6d130cfcd5d06b42c7eb30be8e109cfa87fde197
+  virtual_path: .agents/skills/e2e-testing
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/e2e-testing
+  content_hash: sha256:4ef9ae7914dc50775b5d146bd0bc33123806214f0f55007edc051880d12b6df1
