@@ -63,7 +63,6 @@ safe-outputs:
       policy: blocked
       exclude:
         - .skraft/
-source: SebastienDegodez/agentic-project-demo/catalog/skraft-pipeline/backlog-discoverer.md@main
 ---
 
 # Backlog-Discoverer Agent
