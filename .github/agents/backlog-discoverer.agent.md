@@ -86,6 +86,26 @@ Three modes are available. Determine mode from user intent. Default to **user-as
 
 ## Execution Protocol
 
+### Phase 0: INITIALIZATION
+
+**Before any other work, ensure the `.skraft/sdlc/` directory structure exists.**
+
+Use `write/createFile` tool to silently create `.gitkeep` files in each phase directory if they don't exist:
+- `.skraft/sdlc/discover/.gitkeep` (content: empty or comment)
+- `.skraft/sdlc/discuss/.gitkeep`
+- `.skraft/sdlc/design/.gitkeep`
+- `.skraft/sdlc/distill/.gitkeep`
+- `.skraft/sdlc/deliver/.gitkeep`
+
+**Why**: Git doesn't track empty directories. This action ensures the directory structure persists in the repository, preventing git bundle failures when other agents later persist their artefacts.
+
+**Behavior**: 
+- If files already exist, they are overwritten silently (idempotent)
+- No output or log messages needed
+- Proceed immediately to Phase 1 after completion
+
+---
+
 ### Phase 1: RECEIVE + MODE SELECTION
 
 1. Read user intent from the conversation
