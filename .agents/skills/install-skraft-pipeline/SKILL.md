@@ -151,42 +151,42 @@ To install all agents and skills for the skraft SDLC pipeline, follow these step
 
 1. **Install Agents**:
    ```bash
-   apm install .github/agents/acceptance-designer-reviewer.agent.md
-   apm install .github/agents/acceptance-designer.agent.md
-   apm install .github/agents/agentic-workflows.agent.md
-   apm install .github/agents/backlog-discoverer-reviewer.agent.md
-   apm install .github/agents/backlog-discoverer.agent.md
-   apm install .github/agents/backlog-planner-reviewer.agent.md
-   apm install .github/agents/backlog-planner.agent.md
-   apm install .github/agents/skraft-orchestrator.agent.md
-   apm install .github/agents/software-engineer-reviewer.agent.md
-   apm install .github/agents/software-engineer.agent.md
-   apm install .github/agents/solution-architect-reviewer.agent.md
-   apm install .github/agents/solution-architect.agent.md
+   apm install sebastiendegodez/agentic-project-demo/.github/agents/acceptance-designer-reviewer.agent.md
+   apm install sebastiendegodez/agentic-project-demo/.github/agents/acceptance-designer.agent.md
+   apm install sebastiendegodez/agentic-project-demo/.github/agents/agentic-workflows.agent.md
+   apm install sebastiendegodez/agentic-project-demo/.github/agents/backlog-discoverer-reviewer.agent.md
+   apm install sebastiendegodez/agentic-project-demo/.github/agents/backlog-discoverer.agent.md
+   apm install sebastiendegodez/agentic-project-demo/.github/agents/backlog-planner-reviewer.agent.md
+   apm install sebastiendegodez/agentic-project-demo/.github/agents/backlog-planner.agent.md
+   apm install sebastiendegodez/agentic-project-demo/.github/agents/skraft-orchestrator.agent.md
+   apm install sebastiendegodez/agentic-project-demo/.github/agents/software-engineer-reviewer.agent.md
+   apm install sebastiendegodez/agentic-project-demo/.github/agents/software-engineer.agent.md
+   apm install sebastiendegodez/agentic-project-demo/.github/agents/solution-architect-reviewer.agent.md
+   apm install sebastiendegodez/agentic-project-demo/.github/agents/solution-architect.agent.md
    ```
 
 2. **Install Skills**:
    ```bash
-   apm install .github/skills/acceptance-review-criteria/
-   apm install .github/skills/architecture-decisions/
-   apm install .github/skills/architecture-patterns/
-   apm install .github/skills/architecture-review-criteria/
-   apm install .github/skills/bdd-methodology/
-   apm install .github/skills/clean-architecture-testing/
-   apm install .github/skills/contract-testing/
-   apm install .github/skills/craft-discipline/
-   apm install .github/skills/discovery-review-criteria/
-   apm install .github/skills/github-search-protocol/
-   apm install .github/skills/issue-refinement/
-   apm install .github/skills/issue-triage/
-   apm install .github/skills/mutation-testing/
-   apm install .github/skills/outside-in-tdd/
-   apm install .github/skills/planning-review-criteria/
-   apm install .github/skills/playwright-evidence/
-   apm install .github/skills/red-synthesize-green/
-   apm install .github/skills/sprint-planning/
-   apm install .github/skills/test-design-mandates/
-   apm install .github/skills/test-refactoring-catalog/
+   apm install sebastiendegodez/agentic-project-demo/.github/skills/acceptance-review-criteria/
+   apm install sebastiendegodez/agentic-project-demo/.github/skills/architecture-decisions/
+   apm install sebastiendegodez/agentic-project-demo/.github/skills/architecture-patterns/
+   apm install sebastiendegodez/agentic-project-demo/.github/skills/architecture-review-criteria/
+   apm install sebastiendegodez/agentic-project-demo/.github/skills/bdd-methodology/
+   apm install sebastiendegodez/agentic-project-demo/.github/skills/clean-architecture-testing/
+   apm install sebastiendegodez/agentic-project-demo/.github/skills/contract-testing/
+   apm install sebastiendegodez/agentic-project-demo/.github/skills/craft-discipline/
+   apm install sebastiendegodez/agentic-project-demo/.github/skills/discovery-review-criteria/
+   apm install sebastiendegodez/agentic-project-demo/.github/skills/github-search-protocol/
+   apm install sebastiendegodez/agentic-project-demo/.github/skills/issue-refinement/
+   apm install sebastiendegodez/agentic-project-demo/.github/skills/issue-triage/
+   apm install sebastiendegodez/agentic-project-demo/.github/skills/mutation-testing/
+   apm install sebastiendegodez/agentic-project-demo/.github/skills/outside-in-tdd/
+   apm install sebastiendegodez/agentic-project-demo/.github/skills/planning-review-criteria/
+   apm install sebastiendegodez/agentic-project-demo/.github/skills/playwright-evidence/
+   apm install sebastiendegodez/agentic-project-demo/.github/skills/red-synthesize-green/
+   apm install sebastiendegodez/agentic-project-demo/.github/skills/sprint-planning/
+   apm install sebastiendegodez/agentic-project-demo/.github/skills/test-design-mandates/
+   apm install sebastiendegodez/agentic-project-demo/.github/skills/test-refactoring-catalog/
    ```
 
 ---
