@@ -23,7 +23,7 @@ Formal gate definitions and verdict rubric for the `backlog-discoverer-reviewer`
 
 | ID | Definition | Pass Condition | Severity |
 |---|---|---|---|
-| G1 | All 3 discovery modes were considered, or the triage report explicitly documents why a mode was skipped (e.g., "no recent commits → artifact-driven skipped"). | All modes accounted for in the report. | HIGH |
+| G1 | Both supported discovery modes were considered, or the triage report explicitly documents why a mode was skipped (e.g., "no recent commits → search-based skipped"). | All supported modes accounted for in the report. | HIGH |
 | G2 | No P0 or P1 issues exist in the repository but are absent from the triage report. Verify by sampling: query for `label:priority/P0,priority/P1 is:open is:issue sort:created-desc`, take top 5, check each appears in the triage report. | Zero critical issues absent from triage. | BLOCKER |
 
 ### Lens 2: Prioritization
@@ -46,11 +46,10 @@ Formal gate definitions and verdict rubric for the `backlog-discoverer-reviewer`
 
 Discovery is considered **sufficient** when:
 
-1. All 3 modes were applied — or skipped modes are justified in the report
+1. Both supported modes were applied — or skipped modes are justified in the report
 2. No P0 or P1 issues are missing from the triage (G2 sample check passes)
 3. Coverage is >80% of open issues in the target area (mode-specific):
    - User-assigned: all @me issues are in the report
-   - Artifact-driven: issues related to the modified domain are represented
    - Search-based: all issues matching the declared query are in the report
 
 **Completeness is not about finding every issue** — it is about ensuring critical issues are not hidden.
