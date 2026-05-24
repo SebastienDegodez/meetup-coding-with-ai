@@ -332,6 +332,18 @@
         left: '<div class="panel"><div class="head"><span>Règles</span><span>structure</span></div><div class="body"><pre class="code"><span class="add">Background: shared Given only</span>\n<span class="add">Outline + Examples: boundaries</span>\n<span class="add">Group by intent: accepted/refused</span>\n\n<span class="del">❌ POST /api/eligibility returns 200</span>\n<span class="add">✅ Eligibility request is accepted</span>\n\n<span class="del">❌ EligibilityHandler returns rejected</span>\n<span class="add">✅ Driver refused: too young</span></pre></div></div>',
         right: '<div class="panel"><div class="head"><span>Résultat</span><span>commit 0a82358</span></div><div class="body"><ul class="bullets"><li>1 scenario = 1 behavior</li><li>Déclaratif, pas impératif</li><li>Exemples concrets (17 ans, pas "mineur")</li><li>3-5 steps max par scénario</li><li>Spec leakage éliminé</li></ul><p class="lede" style="margin-top:.8rem">Prompt IA bien plus stable.<br>Plan de tests prêt à exécuter.</p></div></div>'
       },
+      // ─── SLIDE 9: Outside-In TDD ───
+      {
+        kind: 'split',
+        kicker: 'Outside-In TDD',
+        title: 'On part du comportement observable.',
+        left: '<div class="panel"><div class="head"><span>The Iron Rule</span><span>testing</span></div><div class="body"><ul class="bullets"><li>Le test démarre dans <b>Application</b></li><li><b>Zéro mock</b> sur le Domain</li><li>Le design <b>émerge</b> par nécessité</li><li>Tests Domain unitaires : cas complexes</li></ul><p class="lede" style="margin-top:.8rem">Real domain objects.<br>Mocked external boundaries.</p></div></div>',
+        right: '<div class="reveal"><img class="img" src="assets/outside-in-tdd.png" alt="Outside-In TDD" style="max-height:min(60vh, 480px);" /><div class="caption">Application → Domain → Infrastructure. Le design émerge depuis l\'extérieur.</div></div>'
+        // Notes: The Iron Rule (clean-architecture-testing) : Le test d'Application est le défaut. On ne teste pas de Domain séparément par défaut.
+        // On part du comportement (Gherkin) donc on attaque le Handler/UseCase avec un test sociable.
+        // L'émergence du design (outside-in-tdd) : Pas de design "upfront". Le Domain n'est créé qu'à partir du test d'Application en erreur.
+        // La règle sur les Mocks : "Real domain objects, mocked external boundaries". On ne mocke absolument jamais les classes métiers !
+      },
       // ─── SLIDE 5: TDD Wishful + True RED ───
       {
         kind: 'split',
@@ -347,14 +359,6 @@
         title: 'Le Domain émerge.',
         left: '<div class="panel"><div class="head"><span>Application</span><span>Handler</span></div><div class="body"><pre class="code">public EligibilityViewModel Handle(\n    CheckEligibilityQuery query)\n{\n  var driver = new Driver(\n      query.DateOfBirth,\n      query.LicenseYears);\n  var vehicle = new Vehicle(\n      query.VehicleType,\n      query.Power);\n\n  return <span class="add">_policy.Evaluate</span>(\n      driver, vehicle, today)\n    .Match(...);\n}</pre></div></div>',
         right: '<div class="panel"><div class="head"><span>Domain</span><span>EligibilityPolicy</span></div><div class="body"><pre class="code">public EligibilityResult Evaluate(\n    Driver driver,\n    Vehicle vehicle,\n    DateOnly today)\n{\n  <span class="add">if (driver.Age(today)</span>\n      <span class="add">&lt; vehicle.MinimumAge())</span>\n    return EligibilityResult\n      .Refused("Conducteur trop jeune");\n\n  <span class="add">return EligibilityResult.Accepted();</span>\n}</pre><p class="lede" style="margin-top:.6rem"><span class="badge">✓ 1 passed</span></p></div></div>'
-      },
-      // ─── SLIDE 9: Outside-In TDD ───
-      {
-        kind: 'split',
-        kicker: 'Outside-In TDD',
-        title: 'On part du comportement observable.',
-        left: '<div class="panel"><div class="head"><span>Principe</span><span>évolution du TDD</span></div><div class="body"><ul class="bullets"><li>Le test démarre dans <b>Application</b></li><li>Le Domain <b>émerge</b> par nécessité</li><li>Pas de dirty-green intermédiaire</li><li>SYNTHESIZE = code propre en un jet</li></ul><p class="lede" style="margin-top:.8rem">On garde le TDD classique.<br>On améliore sa lisibilité<br>et sa robustesse avec l\'IA.</p></div></div>',
-        right: '<div class="reveal"><img class="img" src="assets/outside-in-tdd.png" alt="Outside-In TDD" style="max-height:min(60vh, 480px);" /><div class="caption">Application → Domain → Infrastructure. Le design émerge depuis l\'extérieur.</div></div>'
       },
       // ─── SLIDE 10: Clean Architecture — vrai code ───
       {
