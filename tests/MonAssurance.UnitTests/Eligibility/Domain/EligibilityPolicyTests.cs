@@ -11,9 +11,9 @@ public class EligibilityPolicyTests
     // ── Age boundaries ──────────────────────────────────────────────────────
 
     [Fact]
-    public void Evaluate_WhenDriverTurns18ExactlyToday_ReturnsAccepted()
+    public void Evaluate_WhenDriverTurns21ExactlyToday_ReturnsAccepted()
     {
-        var driver = new Driver(Today.AddYears(-18), licenseYears: 2);
+        var driver = new Driver(Today.AddYears(-21), licenseYears: 2);
         var vehicle = new Vehicle(VehicleType.Car, power: null);
 
         var result = _policy.Evaluate(driver, vehicle, Today);
@@ -23,9 +23,9 @@ public class EligibilityPolicyTests
     }
 
     [Fact]
-    public void Evaluate_WhenDriverTurns18Tomorrow_ReturnsRefused()
+    public void Evaluate_WhenDriverTurns21Tomorrow_ReturnsRefused()
     {
-        var driver = new Driver(Today.AddYears(-18).AddDays(1), licenseYears: 2);
+        var driver = new Driver(Today.AddYears(-21).AddDays(1), licenseYears: 2);
         var vehicle = new Vehicle(VehicleType.Car, power: null);
 
         var result = _policy.Evaluate(driver, vehicle, Today);

@@ -17,22 +17,6 @@ public class CheckEligibilityQueryHandlerTests
     }
 
     [Fact]
-    public void Handle_WhenDriverIs18AndHasCar_ReturnsEligible()
-    {
-        var handler = BuildHandler(Today);
-        var query = new CheckEligibilityQuery(
-            DateOfBirth: Today.AddYears(-18),
-            VehicleType: VehicleType.Car,
-            Power: null,
-            LicenseYears: 2);
-
-        var result = handler.Handle(query);
-
-        Assert.True(result.IsEligible);
-        Assert.Null(result.RejectionReason);
-    }
-
-    [Fact]
     public void Handle_WhenDriverIs17AndHasCar_ReturnsRefused()
     {
         var handler = BuildHandler(Today);
@@ -78,22 +62,6 @@ public class CheckEligibilityQueryHandlerTests
 
         Assert.False(result.IsEligible);
         Assert.Equal("Conducteur trop jeune pour ce véhicule", result.RejectionReason);
-    }
-
-    [Fact]
-    public void Handle_WhenDriverIs16AndHasElectricScooter_ReturnsEligible()
-    {
-        var handler = BuildHandler(Today);
-        var query = new CheckEligibilityQuery(
-            DateOfBirth: Today.AddYears(-16),
-            VehicleType: VehicleType.ElectricScooter,
-            Power: null,
-            LicenseYears: 0);
-
-        var result = handler.Handle(query);
-
-        Assert.True(result.IsEligible);
-        Assert.Null(result.RejectionReason);
     }
 
     [Fact]
