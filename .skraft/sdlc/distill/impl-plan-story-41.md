@@ -29,13 +29,13 @@ These tests will turn RED immediately because the current implementation returns
 
 Write tests mapping to the Gherkin scenarios in `eligibility-minimum-age.feature`:
 
-| Test method | AC | Expected outcome |
-|---|---|---|
-| `Driver_Aged20_WithCar_IsRefused` | AC-01 | `IsEligible = false`, `RejectionReason = "Conducteur trop jeune pour ce véhicule"` |
-| `Driver_Aged21_WithCar_IsAccepted` | AC-02 | `IsEligible = true` |
-| `Driver_Aged20_WithMotorcycle_IsRefused` | AC-03 | `IsEligible = false`, `RejectionReason = "Conducteur trop jeune pour ce véhicule"` |
-| `Driver_Aged16_WithElectricScooter_IsAccepted` | AC-04 | `IsEligible = true` |
-| `Driver_Aged18_WithCar_IsRefused` | AC-05 | `IsEligible = false`, `RejectionReason = "Conducteur trop jeune pour ce véhicule"` |
+| Test method | Scenario | AC | Expected outcome |
+|---|---|---|---|
+| `Driver_Aged21_WithCar_IsAccepted` | Driver aged 21 applying for a car is accepted | AC-02 | `IsEligible = true` |
+| `Driver_Aged16_WithElectricScooter_IsAccepted` | Driver aged 16 applying for an electric scooter is accepted | AC-04 | `IsEligible = true` |
+| `Driver_Aged20_WithCar_IsRefused` | Driver aged 20 applying for a car is refused | AC-01 | `IsEligible = false`, `RejectionReason = "Conducteur trop jeune pour ce véhicule"` |
+| `Driver_Aged20_WithMotorcycle_IsRefused` | Driver aged 20 applying for a motorcycle is refused | AC-03 | `IsEligible = false`, `RejectionReason = "Conducteur trop jeune pour ce véhicule"` |
+| `Driver_Aged18_WithCar_IsRefused` | Driver aged 18 applying for a car is refused | AC-05 | `IsEligible = false`, `RejectionReason = "Conducteur trop jeune pour ce véhicule"` |
 
 All tests will be RED because the current minimum age for Car/Motorcycle is 18.
 

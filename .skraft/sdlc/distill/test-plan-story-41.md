@@ -10,17 +10,28 @@
 
 ## Coverage Matrix
 
-| Scenario | Use Case Boundary | Layer | Double Type | Walking Skeleton | Priority |
-|---|---|---|---|---|---|
-| Driver aged 21 applying for a car is accepted | `CheckEligibilityQueryHandler` | Application | InMemory (no repo needed — stateless query) | A | P1 |
-| Driver aged 16 applying for an electric scooter is accepted | `CheckEligibilityQueryHandler` | Application | InMemory | A | P1 |
-| Driver aged 20 applying for a car is refused | `CheckEligibilityQueryHandler` | Application | InMemory | A | P1 |
-| Driver aged 20 applying for a motorcycle is refused | `CheckEligibilityQueryHandler` | Application | InMemory | A | P2 |
-| Driver aged 18 applying for a car is refused | `CheckEligibilityQueryHandler` | Application | InMemory | A | P2 |
-| `Vehicle.MinimumAge()` returns 21 for Car | `Vehicle.MinimumAge()` (domain pure function) | Domain | None (pure function) | — | P1 |
-| `Vehicle.MinimumAge()` returns 21 for Motorcycle | `Vehicle.MinimumAge()` (domain pure function) | Domain | None (pure function) | — | P1 |
-| `Vehicle.MinimumAge()` returns 16 for ElectricScooter | `Vehicle.MinimumAge()` (domain pure function) | Domain | None (pure function) | — | P1 |
-| Parametrised boundary — all vehicle/age combinations | `CheckEligibilityQueryHandler` | Application | InMemory | A | P2 |
+| Scenario | AC | Use Case Boundary | Layer | Double Type | Walking Skeleton | Priority |
+|---|---|---|---|---|---|---|
+| Driver aged 21 applying for a car is accepted | AC-02 | `CheckEligibilityQueryHandler` | Application | InMemory (stateless query) | A | P1 |
+| Driver aged 16 applying for an electric scooter is accepted | AC-04 | `CheckEligibilityQueryHandler` | Application | InMemory | A | P1 |
+| Driver aged 20 applying for a car is refused | AC-01 | `CheckEligibilityQueryHandler` | Application | InMemory | A | P1 |
+| Driver aged 20 applying for a motorcycle is refused | AC-03 | `CheckEligibilityQueryHandler` | Application | InMemory | A | P2 |
+| Driver aged 18 applying for a car is refused | AC-05 | `CheckEligibilityQueryHandler` | Application | InMemory | A | P2 |
+| `Vehicle.MinimumAge()` returns 21 for Car | — | `Vehicle.MinimumAge()` (domain pure function) | Domain | None (pure function) | — | P1 |
+| `Vehicle.MinimumAge()` returns 21 for Motorcycle | — | `Vehicle.MinimumAge()` (domain pure function) | Domain | None (pure function) | — | P1 |
+| `Vehicle.MinimumAge()` returns 16 for ElectricScooter | — | `Vehicle.MinimumAge()` (domain pure function) | Domain | None (pure function) | — | P1 |
+
+---
+
+## AC → Scenario Traceability
+
+| AC | Scenario | Status |
+|---|---|---|
+| AC-01 — Driver aged 20, Car → refused | Driver aged 20 applying for a car is refused | ✅ Covered |
+| AC-02 — Driver aged 21, Car → accepted | Driver aged 21 applying for a car is accepted | ✅ Covered |
+| AC-03 — Driver aged 20, Motorcycle → refused | Driver aged 20 applying for a motorcycle is refused | ✅ Covered |
+| AC-04 — Driver aged 16, ElectricScooter → accepted | Driver aged 16 applying for an electric scooter is accepted | ✅ Covered |
+| AC-05 — Driver aged 18, Car → refused | Driver aged 18 applying for a car is refused | ✅ Covered |
 
 ---
 
