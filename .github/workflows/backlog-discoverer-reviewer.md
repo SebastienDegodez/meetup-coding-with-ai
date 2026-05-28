@@ -85,6 +85,19 @@ Branch handoff rule:
 
 After rendering your structured verdict:
 
+## Verdict Publication Contract (MANDATORY — FIRST STEP)
+
+Before any `dispatch_workflow` or `add_labels` call, you MUST publish the full structured verdict as a comment so it is visible to humans on GitHub. This is non-negotiable: a silent reviewer run is treated as a process failure.
+
+At DISCOVER phase no PR exists yet — the comment targets the issue directly.
+
+Steps:
+
+1. Call `add_comment` ONCE with `issue_number: ${{ github.event.inputs.issue_number }}` and the full verdict body (lenses + synthesis + verdict + rationale + per-gate findings). If `issue_number` is empty (milestone-only mode), include the verdict body as a summary comment on the milestone tracking issue or skip if none exists.
+2. Only AFTER the comment has been emitted, perform the verdict action from the table below.
+
+## Verdict Actions
+
 | Verdict | Action |
 |---------|--------|
 | **APPROVED** | **Human gate check:** if the issue HAS the `human:gate` label, add `state:human-approval-needed` and do NOT dispatch — a human must add `human:handoff-next` to proceed. Otherwise (default): dispatch `backlog-planner` with `issue_number` + `story_type` + `working_branch` (unchanged pass-through). If milestone-only: add a summary comment and do not dispatch downstream workflow. |

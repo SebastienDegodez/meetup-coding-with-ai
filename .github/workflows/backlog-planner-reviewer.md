@@ -79,6 +79,24 @@ source: SebastienDegodez/agentic-project-demo/catalog/skraft-pipeline/backlog-pl
 
 After rendering your structured verdict:
 
+## Verdict Publication Contract (MANDATORY — FIRST STEP)
+
+Before any `dispatch_workflow` or `add_labels` call, you MUST publish the full structured verdict as a comment so it is visible to humans on GitHub. This is non-negotiable: a silent reviewer run is treated as a process failure.
+
+Steps:
+
+1. Lookup the open PR for the working branch:
+
+   ```bash
+   PR_NUMBER=$(gh pr list --head "${working_branch}" --state open --json number --jq '.[0].number')
+   ```
+
+2. Call `add_comment` ONCE with `pull_request_number: ${PR_NUMBER}` and the full verdict body (lenses + synthesis + verdict + rationale + per-gate findings).
+3. If `PR_NUMBER` is empty, fall back to `add_comment` with `issue_number: ${{ github.event.inputs.issue_number }}`.
+4. Only AFTER the comment has been emitted, perform the verdict action from the table below.
+
+## Verdict Actions
+
 | Verdict | Action |
 |---------|--------|
 | **APPROVED** | **Human gate check:** if the issue HAS the `human:gate` label, add `state:human-approval-needed` and do NOT dispatch — a human must add `human:handoff-next` to proceed. Otherwise (default): dispatch `solution-architect` with `issue_number` + `story_type` + `working_branch` (unchanged pass-through). |

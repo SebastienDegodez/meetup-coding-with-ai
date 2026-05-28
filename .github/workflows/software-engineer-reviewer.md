@@ -99,6 +99,24 @@ After rendering your verdict:
 - Always dispatch downstream workflows with the same `working_branch` value.
 - If malformed `sdlc/sdlc/` is encountered, normalize once to `sdlc/` + remainder before checkout/dispatch.
 
+## Verdict Publication Contract (MANDATORY — FIRST STEP)
+
+Before submitting the PR review or any `dispatch_workflow` / `add_labels` call, you MUST publish the full structured verdict as a comment on the PR so it is visible to humans on GitHub. The formal PR review (APPROVE / REQUEST_CHANGES / COMMENT) complements — but does NOT replace — this verdict comment. A silent reviewer run is treated as a process failure.
+
+Steps:
+
+1. Use the PR under review directly: `pull_request_number: ${{ github.event.inputs.pr_number }}`. If empty, lookup via:
+
+   ```bash
+   PR_NUMBER=$(gh pr list --head "${working_branch}" --state open --json number --jq '.[0].number')
+   ```
+
+2. Call `add_comment` ONCE with `pull_request_number` set to the PR number and the full verdict body (lenses + synthesis + verdict + rationale + per-gate findings).
+3. If no PR can be resolved, fall back to `add_comment` with `issue_number: ${{ github.event.inputs.issue_number }}`.
+4. Only AFTER the comment has been emitted, submit the formal PR review and perform the verdict action from the table below.
+
+## Verdict Actions
+
 | Verdict | Action |
 |---------|--------|
 | **APPROVED** | **Human gate check:** if the issue HAS the `human:gate` label, submit `APPROVE` review → add `state:human-approval-needed` — a human must add `human:handoff-next` to mark `state:done`. Otherwise (default): submit `APPROVE` review → add `state:done` → remove `state:review-needed`. |
