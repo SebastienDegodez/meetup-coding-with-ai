@@ -17,11 +17,11 @@ public class CheckEligibilityQueryHandlerTests
     }
 
     [Fact]
-    public void Handle_WhenDriverIs18AndHasCar_ReturnsEligible()
+    public void Handle_WhenDriverIs21AndHasCar_ReturnsEligible()
     {
         var handler = BuildHandler(Today);
         var query = new CheckEligibilityQuery(
-            DateOfBirth: Today.AddYears(-18),
+            DateOfBirth: Today.AddYears(-21),
             VehicleType: VehicleType.Car,
             Power: null,
             LicenseYears: 2);
