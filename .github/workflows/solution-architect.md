@@ -54,17 +54,7 @@ safe-outputs:
   push-to-pull-request-branch:
     target: "*"
     max: 1
-    protected-files:
-      policy: blocked
-      exclude:
-        - .skraft/
-        - .github/instructions/business-lexicon.instructions.md
-  create-pull-request:
-    draft: true
-    preserve-branch-name: true
-    recreate-ref: true
-    base-branch: main
-    max: 1
+    if-no-changes: error
     protected-files:
       policy: blocked
       exclude:
@@ -97,15 +87,19 @@ source: SebastienDegodez/agentic-project-demo/catalog/skraft-pipeline/solution-a
 
 This workflow guarantees persistence before reviewer dispatch:
 
-1. Generate DESIGN artefacts in `.skraft/sdlc/design/`.
-2. Persist artefacts remotely:
-   - First, look up the open pull request whose head branch equals `working_branch` (use `gh pr list --head "${working_branch}" --state open --json number --jq '.[0].number'`).
-   - If a PR number is found, call `push-to-pull-request-branch` and **include `pull_request_number: <NUMBER>`** in the JSON payload (this is REQUIRED because `target: "*"` does not auto-resolve the PR).
-   - If no PR exists yet for `working_branch`, fallback to `create-pull-request` (which will open a new PR using `working_branch` as head).
-3. Treat any remote persistence failure (PR create/update/auth/write/missing `pull_request_number`) as BLOCKED:
-  - add label `state:blocked`
-  - post one concise blocker comment
-  - do **not** dispatch `solution-architect-reviewer`
+1. **Checkout the PR branch first** so the bundle's prerequisite commits are present in the local repo:
+   - `git fetch origin "${working_branch}":"${working_branch}"`
+   - `git checkout "${working_branch}"`
+   - Without this step, the safe-outputs processor will fail with `Repository lacks these prerequisite commits` because the runner is checked out on the workflow `--ref` (e.g. `main` or a feature branch), not on `working_branch`.
+2. Generate DESIGN artefacts in `.skraft/sdlc/design/` and commit them on `working_branch`.
+3. Look up the open pull request whose head branch equals `working_branch`:
+   - `PR_NUMBER=$(gh pr list --head "${working_branch}" --state open --json number --jq '.[0].number')`
+   - If `PR_NUMBER` is empty, treat as BLOCKED (the DISCUSS phase must have opened the PR before DESIGN runs).
+4. Persist artefacts **exclusively** via `push-to-pull-request-branch` with `pull_request_number: ${PR_NUMBER}` in the JSON payload (REQUIRED because `target: "*"` does not auto-resolve the PR). `create-pull-request` is NOT available in this workflow — the PR is owned by the DISCUSS phase.
+5. Treat any remote persistence failure (missing PR / push failure / auth / write / missing `pull_request_number`) as BLOCKED:
+   - add label `state:blocked`
+   - post one concise blocker comment
+   - do **not** dispatch `solution-architect-reviewer`
 
 Do not rely on reviewer-side missing-file checks for this guarantee.
 
