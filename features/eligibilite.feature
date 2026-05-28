@@ -7,8 +7,8 @@ Fonctionnalité: Éligibilité à la souscription d'assurance
   Contexte:
     Étant donné nous sommes le "01/01/2026"
 
-  # Règle : Il faut être majeur (≥18 ans) pour assurer une voiture ou une grosse moto
-  Scénario: Refus de souscription voiture pour un mineur
+  # Règle : Il faut avoir au moins 21 ans pour assurer une voiture ou une moto
+  Scénario: Refus de souscription voiture pour un conducteur trop jeune
     Étant donné un conducteur né le "10/10/2010"
     Et le véhicule est une "Voiture"
     Quand je demande une éligibilité
@@ -20,14 +20,15 @@ Fonctionnalité: Éligibilité à la souscription d'assurance
     Quand je demande une éligibilité
     Alors la demande est <resultat>
 
-    Exemples: Conducteurs mineurs refusés
+    Exemples: Conducteurs trop jeunes refusés
       | age | vehicule | resultat                                                       |
-      | 17  | Voiture  | refusée avec le motif "Conducteur trop jeune pour ce véhicule" |
-      | 16  | Moto     | refusée avec le motif "Conducteur trop jeune pour ce véhicule" |
+      | 20  | Voiture  | refusée avec le motif "Conducteur trop jeune pour ce véhicule" |
+      | 18  | Voiture  | refusée avec le motif "Conducteur trop jeune pour ce véhicule" |
+      | 20  | Moto     | refusée avec le motif "Conducteur trop jeune pour ce véhicule" |
 
-    Exemples: Conducteurs majeurs acceptés
+    Exemples: Conducteurs éligibles acceptés
       | age | vehicule | resultat |
-      | 18  | Voiture  | acceptée |
+      | 21  | Voiture  | acceptée |
 
   # Règle : On peut assurer des petits véhicules électriques dès 16 ans
   Plan du Scénario: Vérification de l'âge minimum pour les véhicules électriques
