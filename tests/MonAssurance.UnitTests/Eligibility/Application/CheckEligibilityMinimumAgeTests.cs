@@ -67,7 +67,7 @@ public class CheckEligibilityMinimumAgeTests
         Assert.Equal("Conducteur trop jeune pour ce véhicule", result.RejectionReason);
     }
 
-    // AC-03: Driver aged 20 applying for a motorcycle is refused
+    // AC-03: Driver aged 20 applying for a motorcycle is refused (age rule, not experience rule)
     [Fact]
     public void Handle_WhenDriverIs20AndHasMotorcycle_ReturnsRefused()
     {
@@ -75,8 +75,8 @@ public class CheckEligibilityMinimumAgeTests
         var query = new CheckEligibilityQuery(
             DateOfBirth: Today.AddYears(-20),
             VehicleType: VehicleType.Motorcycle,
-            Power: 80,
-            LicenseYears: 1);
+            Power: null,
+            LicenseYears: 5);
 
         var result = handler.Handle(query);
 
@@ -84,7 +84,7 @@ public class CheckEligibilityMinimumAgeTests
         Assert.Equal("Conducteur trop jeune pour ce véhicule", result.RejectionReason);
     }
 
-    // AC-05: Driver aged 18 applying for a car is refused (boundary: previously eligible, now refused)
+    // AC-05: Driver aged 18 applying for a car is refused (minimum age is now 21)
     [Fact]
     public void Handle_WhenDriverIs18AndHasCar_ReturnsRefused()
     {
@@ -99,5 +99,22 @@ public class CheckEligibilityMinimumAgeTests
 
         Assert.False(result.IsEligible);
         Assert.Equal("Conducteur trop jeune pour ce véhicule", result.RejectionReason);
+    }
+
+    // Positive boundary: Driver aged exactly 21 applying for a motorcycle is accepted
+    [Fact]
+    public void Handle_WhenDriverIs21AndHasMotorcycle_ReturnsEligible()
+    {
+        var handler = BuildHandler();
+        var query = new CheckEligibilityQuery(
+            DateOfBirth: Today.AddYears(-21),
+            VehicleType: VehicleType.Motorcycle,
+            Power: null,
+            LicenseYears: 5);
+
+        var result = handler.Handle(query);
+
+        Assert.True(result.IsEligible);
+        Assert.Null(result.RejectionReason);
     }
 }
