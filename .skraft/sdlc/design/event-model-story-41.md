@@ -16,7 +16,7 @@ updated business rule transparently.
 ```mermaid
 timeline
     title Minimum Age Eligibility Check — Event Timeline (STORY-41)
-    section Command
+    section Query
         CheckEligibility : Submitted by Driver (driverId, dateOfBirth, vehicleType, power, licenseYears)
     section Event
         EligibilityChecked : Raised by EligibilityPolicy — result Eligible or Ineligible
@@ -31,7 +31,7 @@ timeline
 | Step | Name | Description |
 |---|---|---|
 | Trigger | Driver requests eligibility check | Driver submits their details (age, vehicle type) to the portal |
-| Command | `CheckEligibility` | Captures driver date of birth, license years, vehicle type, and engine power |
+| Query | `CheckEligibility` | Captures driver date of birth, license years, vehicle type, and engine power |
 | Event | `EligibilityChecked` | Records the outcome — `Eligible` or `Ineligible` with optional `RejectionReason` |
 | Read Model | `EligibilityResult` | Returns `eligible: bool` and `rejectionReason?: string` to the driver portal |
 

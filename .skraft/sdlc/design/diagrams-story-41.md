@@ -12,7 +12,7 @@
 graph TD
     subgraph EligibilityContext_Domain["Domain Layer"]
         EligibilityPolicy["EligibilityPolicy\n(Domain Service)"]
-        Driver["Driver\n(Entity)"]
+        Driver["Driver\n(Value Object)"]
         Vehicle["Vehicle\n(Value Object)"]
         VehicleType["VehicleType\n(Enum: Car | Motorcycle | ElectricScooter)"]
         EligibilityResult["EligibilityResult\n(Value Object)"]
@@ -86,7 +86,7 @@ graph TD
 | Type | Name | Role | STORY-41 Impact |
 |---|---|---|---|
 | Domain Service | `EligibilityPolicy` | Orchestrates eligibility rules; has no mutable state | None — logic delegates to `Vehicle.MinimumAge()` |
-| Entity | `Driver` | Holds date of birth and license years; identity by value composition | None |
+| Value Object | `Driver` | Holds date of birth and license years; equality by value composition, no lifecycle identity in EligibilityContext | None |
 | Value Object | `Vehicle` | Holds vehicle type and engine power; **owns `MinimumAge()` rule** | **Modified** — returns 21 for Car/Motorcycle |
 | Value Object | `EligibilityResult` | Wraps `Eligible`/`Ineligible` + optional rejection reason | None |
 | Enum | `VehicleType` | `Car`, `Motorcycle`, `ElectricScooter` | None |
