@@ -7,11 +7,11 @@ description: Use when reviewing DESIGN artefacts (event models, ADRs, component 
 
 ## Overview
 
-9 gates across 3 lenses, applied by the `solution-architect-reviewer` agent to DESIGN artefacts. Gates enforce DDD correctness, Clean Architecture compliance, and fitness for the stories in scope.
+13 gates across 3 lenses, applied by the `solution-architect-reviewer` agent to DESIGN artefacts. Gates enforce DDD correctness, Clean Architecture compliance, persona-side consistency gate integrity, and fitness for the stories in scope.
 
 **Applied by:** `solution-architect-reviewer`
-**Applied to:** ADRs, event models, component diagrams, context maps, interface contracts
-**Prior phase required:** DESIGN artefacts from `solution-architect`
+**Applied to:** ADRs, event models, component diagrams, context maps, interface contracts, consistency matrices, supersession plans, blocker files
+**Prior phase required:** DESIGN artefacts from `solution-architect` (Phases 1–10 complete; no open blocker file)
 
 ---
 
@@ -19,12 +19,14 @@ description: Use when reviewing DESIGN artefacts (event models, ADRs, component 
 
 ### Lens 1 — consistency-lens
 
-Evaluates: ADRs + diagrams + contracts
+Evaluates: ADRs + diagrams + contracts + consistency-matrix + supersession-plan + blockers
 
 | Gate | Definition | Pass condition | Severity |
 |---|---|---|---|
-| G1 | Every structural element in a diagram (aggregate, bounded context, pattern) has a traceable ADR justification. No element exists without an architectural rationale. | All structural elements in all diagrams reference at least one ADR. | HIGH |
-| G2 | No two ADRs contradict each other. If one ADR supersedes another, the superseded ADR is marked `Superseded by ADR-{NNN}`. | Zero contradicting decisions across all ADRs. Zero un-linked supersessions. | BLOCKER |
+| G1 | Every structural element in a diagram (aggregate, bounded context, pattern) has a traceable ADR justification. No element exists without an architectural rationale. | All structural elements in all diagrams reference at least one ADR. | **BLOCKER** |
+| G2 | No two ADRs contradict each other. Supersession links are bidirectional: superseded ADR carries `Superseded by ADR-{NNN}`; new ADR carries `Supersedes: ADR-{MMM}`. | Zero contradicting decisions across all ADRs. Zero broken supersession links. | BLOCKER |
+| G10 | A `consistency-matrix-{story}.md` exists for every story under design and its `consistency-gate` cell is `PASS`. The back-propagation journal explains every rewrite. | Matrix file present and PASS for every story; journal complete. | BLOCKER |
+| G12 | Every row in `supersession-plan-{story}.md` is fully realised: bidirectional ADR links present, AND no descriptive artefact still cites the superseded ADR. | Plan rows = realised supersessions; zero stale citations. | BLOCKER |
 
 ### Lens 2 — architecture-compliance-lens
 
@@ -39,13 +41,20 @@ Evaluates: diagrams + contracts + event models
 
 ### Lens 3 — fitness-lens
 
-Evaluates: diagrams + contracts + stories
+Evaluates: diagrams + contracts + stories + ADRs
 
 | Gate | Definition | Pass condition | Severity |
 |---|---|---|---|
-| G7 | Every story from DISCUSS maps to at least one command, event, or read model in the event model. | All story IDs from stories-{milestone}.md appear in at least one event model slice. | HIGH |
-| G8 | Every command in contracts has at least one corresponding domain event. No dangling commands. | Zero commands without a corresponding domain event in contracts or diagrams. | HIGH |
+| G7 | Every story from DISCUSS maps to at least one trigger (Command or Query) in the event model. | All story IDs from stories-{milestone}.md appear in at least one event model slice with either a Command or a Query trigger. | HIGH |
+| G8 | Every Command in contracts has at least one corresponding domain event. Queries are exempt. No dangling commands. | Zero Commands without a corresponding domain event. | HIGH |
 | G9 | No aggregate, bounded context, Event Sourcing adoption, or Saga is introduced without a traceable story justification. | Zero unjustified architectural elements. Every element traces back to a story ID. | MEDIUM |
+| G11 | Every ADR adopting a complexity-adding pattern (`CQRS`, `Event Sourcing`, `Saga`, `eventual consistency`, `micro-service split`, `ACL`) cites at least one admissible force in Context AND includes `"do without the pattern"` in Alternatives Rejected. `"Consistency with existing code"` alone is **not** admissible. | All such ADRs pass both checks. | HIGH |
+
+### Cross-cutting — escalation gate
+
+| Gate | Definition | Pass condition | Severity |
+|---|---|---|---|
+| G13 | No open blocker file exists under `.skraft/sdlc/design/blockers/` with frontmatter `status: awaiting_human`. | All blocker files resolved or absent. | BLOCKER |
 
 ---
 
@@ -64,6 +73,7 @@ Evaluates: diagrams + contracts + stories
 
 | Condition | Verdict |
 |---|---|
+| G13 fires (any open blocker file) | `rejected` — escalation pending |
 | ≥1 BLOCKER finding | `rejected` |
 | ≥1 HIGH finding, 0 BLOCKERs | `changes_requested` |
 | MEDIUM findings only, 0 HIGH, 0 BLOCKER | `changes_requested` |

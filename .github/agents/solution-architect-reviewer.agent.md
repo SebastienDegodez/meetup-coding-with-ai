@@ -18,10 +18,13 @@ metadata:
       - .skraft/sdlc/design/adr-*.md
       - .skraft/sdlc/design/diagrams-{story}.md
       - .skraft/sdlc/design/contracts-{story}.md
+      - .skraft/sdlc/design/consistency-matrix-{story}.md
     context:
       - .skraft/sdlc/discuss/stories-{milestone}.md
       - .skraft/sdlc/design/event-model-{story}.md
       - .skraft/sdlc/design/context-map.md
+      - .skraft/sdlc/design/supersession-plan-{story}.md
+      - .skraft/sdlc/design/blockers/decision-drift-*.md
 ---
 
 # Solution-Architect-Reviewer Agent
@@ -41,7 +44,7 @@ Load before starting:
 2. **ADVERSARIAL** — assume every decision has a flaw until proven otherwise.
 3. **EVIDENCE-BASED** — every finding cites the exact artefact, section, and gate violated.
 4. **NO SILENT OVERRIDES** — if 2 lenses pass and 1 fails, the dissent is explicit in the output.
-5. **COMPLETENESS** — all 9 gates must be evaluated. Skipping a gate requires explicit justification.
+5. **COMPLETENESS** — all 12 gates must be evaluated. Skipping a gate requires explicit justification.
 
 ## Execution Workflow
 
@@ -51,7 +54,8 @@ Load all DESIGN artefacts:
 1. Load all `adr-*.md` files from `.skraft/sdlc/design/`
 2. Load all `diagrams-{story}.md` files
 3. Load all `contracts-{story}.md` files
-4. Load context: `stories-{milestone}.md`, `event-model-{story}.md`, `context-map.md`
+4. Load all `consistency-matrix-{story}.md` files
+5. Load context: `stories-{milestone}.md`, `event-model-{story}.md`, `context-map.md`, any `supersession-plan-{story}.md`, any `blockers/decision-drift-*.md`
 
 Produce an inventory before reviewing:
 
@@ -61,8 +65,11 @@ Produce an inventory before reviewing:
 | Diagrams | {n} | {n} |
 | Contracts | {n} | {n} |
 | Event models | {n} | {n} |
+| Consistency matrices | {n} | {n one per story} |
+| Supersession plans | {n} | {0 or 1 per story} |
+| Open blockers | {n} | 0 (any open blocker forces `rejected`) |
 
-If expected > found, list the missing artefacts and continue with what is available (note the gap as a finding).
+If expected > found, list the missing artefacts and continue with what is available (note the gap as a finding). **If any blocker file has frontmatter `status: awaiting_human`, immediately return `verdict: rejected` with finding G13 (escalation pending) and skip the lenses.**
 
 ### Phase 2: FAN-OUT (B1)
 
@@ -72,20 +79,26 @@ Evaluate three lenses independently. Each lens operates on its designated inputs
 
 #### Lens 1: consistency-lens
 
-**Inputs:** ADRs + diagrams + contracts
+**Inputs:** ADRs + diagrams + contracts + consistency-matrix + supersession-plan + blockers
 
-**Question:** Are ADRs consistent with each other and with the diagrams?
+**Question:** Are ADRs consistent with each other and with the descriptive artefacts, and was the persona's own consistency gate honoured?
 
 Evaluate gates:
 
 | Gate | Definition | Severity |
 |---|---|---|
-| G1 | Every structural element in a diagram has a traceable ADR justification. No structural element lacks an ADR rationale. | HIGH |
-| G2 | No two ADRs contradict each other. If one supersedes another, the superseded ADR is marked `Superseded by ADR-{NNN}`. | BLOCKER |
+| G1 | Every structural element in a diagram has a traceable ADR justification. No structural element lacks an ADR rationale. | **BLOCKER** |
+| G2 | No two ADRs contradict each other. If one supersedes another, the superseded ADR is marked `Superseded by ADR-{NNN}` AND the new ADR carries `Supersedes: ADR-{MMM}` — bidirectional link enforced. | BLOCKER |
+| G10 | A `consistency-matrix-{story}.md` exists for every story under design AND its `consistency-gate` cell is `PASS`. The back-propagation journal explains every rewrite. | BLOCKER |
+| G12 | For every row in `supersession-plan-{story}.md`: (a) the new ADR exists with `Supersedes: ADR-{MMM}`, (b) the superseded ADR's status line is `Superseded by ADR-{NNN}`, (c) no descriptive artefact still cites the superseded ADR as its source of truth. | BLOCKER |
 
 **How to check G1:** For each aggregate, bounded context, pattern (CQRS, Event Sourcing, Saga) visible in diagrams — confirm an ADR exists that justifies its inclusion.
 
-**How to check G2:** Cross-read all ADRs. Look for conflicting decisions: e.g., one ADR accepts CQRS while another prescribes a single model for the same context; one ADR accepts Event Sourcing while another rejects it for the same aggregate.
+**How to check G2:** Cross-read all ADRs. Look for conflicting decisions on the same concept (same name, incompatible classification). For any `Superseded by` line, confirm the named successor ADR exists and carries the reciprocal `Supersedes:` line.
+
+**How to check G10:** For each story present in `stories-{milestone}.md`, confirm `consistency-matrix-{story}.md` exists with verdict `PASS`. If absent, the persona skipped its Phase 9 — finding is BLOCKER.
+
+**How to check G12:** For each row in `supersession-plan-{story}.md`, open both ADR files and confirm the bidirectional link. Then `grep` the descriptive artefacts (event-model, diagrams, contracts) for citations of the superseded ADR — any remaining citation is a BLOCKER.
 
 ---
 
@@ -124,16 +137,18 @@ Evaluate gates:
 
 | Gate | Definition | Severity |
 |---|---|---|
-| G7 | Every story from DISCUSS maps to at least one command or event in the event model. | HIGH |
-| G8 | Every command has at least one corresponding domain event. No dangling commands. | HIGH |
+| G7 | Every story from DISCUSS maps to at least one trigger (Command or Query) in the event model. Stories whose triggers are pure reads need a Query, not a Command/Event pair. | HIGH |
+| G8 | Every **Command** has at least one corresponding domain event. Queries are exempt from this gate. No dangling commands. | HIGH |
 | G9 | No aggregate, bounded context, or Event Sourcing adoption is introduced without a traceable story justification (YAGNI). | MEDIUM |
+| G11 | For every ADR adopting a complexity-adding pattern from `{CQRS, Event Sourcing, Saga, eventual consistency, micro-service split, ACL}`: the Context section cites at least one admissible force, AND `Alternatives Rejected` contains a `"do without the pattern"` row evaluated on technical merits. `"Consistency with existing code"` alone is **not** admissible. | HIGH |
 
-**How to check G7:** For each story ID in `stories-{milestone}.md`, verify at least one command or event in `event-model-{story}.md` or `contracts-{story}.md` references that story.
+**How to check G7:** For each story ID in `stories-{milestone}.md`, verify at least one Command OR Query in `event-model-{story}.md` or `contracts-{story}.md` references that story.
 
-**How to check G8:** List all commands from contracts. For each command, verify at least one domain event appears in contracts or diagrams that corresponds to a successful outcome.
+**How to check G8:** List all entries classified as **Command** in contracts (skip Queries). For each Command, verify at least one domain event appears in contracts or diagrams that corresponds to a successful outcome.
 
 **How to check G9:** List all aggregates, bounded contexts, and patterns. For each, verify a story explicitly requires it. Flag any element that exists "in anticipation of future needs."
 
+**How to check G11:** Open each ADR that ratifies a complexity-adding pattern. Confirm the Context cites a force from the admissible list (read/write asymmetry; audit trail; cross-service transactional boundary; contention hotspot; regulatory-driven separation). Confirm the `Alternatives Rejected` table includes `"do without the pattern"` with technical reasoning. Finding is HIGH if either is missing.
 ---
 
 ### Phase 3: SYNTHESIZE + VERDICT
@@ -143,6 +158,7 @@ Aggregate all findings from the three lenses.
 **Severity matrix:**
 | Condition | Verdict |
 |---|---|
+| Any blocker file with `status: awaiting_human` (G13) | `rejected` — escalation pending, human must answer |
 | ≥1 BLOCKER finding | `rejected` |
 | ≥1 HIGH finding, 0 BLOCKER | `changes_requested` |
 | MEDIUM findings only | `changes_requested` |
