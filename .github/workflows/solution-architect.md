@@ -98,8 +98,11 @@ source: SebastienDegodez/agentic-project-demo/catalog/skraft-pipeline/solution-a
 This workflow guarantees persistence before reviewer dispatch:
 
 1. Generate DESIGN artefacts in `.skraft/sdlc/design/`.
-2. Persist artefacts remotely by updating an existing PR branch via `push-to-pull-request-branch`; if no PR exists yet for `working_branch`, fallback to `create-pull-request`.
-3. Treat any remote persistence failure (PR create/update/auth/write) as BLOCKED:
+2. Persist artefacts remotely:
+   - First, look up the open pull request whose head branch equals `working_branch` (use `gh pr list --head "${working_branch}" --state open --json number --jq '.[0].number'`).
+   - If a PR number is found, call `push-to-pull-request-branch` and **include `pull_request_number: <NUMBER>`** in the JSON payload (this is REQUIRED because `target: "*"` does not auto-resolve the PR).
+   - If no PR exists yet for `working_branch`, fallback to `create-pull-request` (which will open a new PR using `working_branch` as head).
+3. Treat any remote persistence failure (PR create/update/auth/write/missing `pull_request_number`) as BLOCKED:
   - add label `state:blocked`
   - post one concise blocker comment
   - do **not** dispatch `solution-architect-reviewer`
