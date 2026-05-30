@@ -44,7 +44,7 @@ Load before starting:
 2. **ADVERSARIAL** — assume every decision has a flaw until proven otherwise.
 3. **EVIDENCE-BASED** — every finding cites the exact artefact, section, and gate violated.
 4. **NO SILENT OVERRIDES** — if 2 lenses pass and 1 fails, the dissent is explicit in the output.
-5. **COMPLETENESS** — all 12 gates must be evaluated. Skipping a gate requires explicit justification.
+5. **COMPLETENESS** — all 15 gates must be evaluated. Skipping a gate requires explicit justification.
 
 ## Execution Workflow
 
@@ -87,12 +87,15 @@ Evaluate gates:
 
 | Gate | Definition | Severity |
 |---|---|---|
-| G1 | Every structural element in a diagram has a traceable ADR justification. No structural element lacks an ADR rationale. | **BLOCKER** |
+| G1 | Every structural element in a diagram AND every complexity-adding pattern actually present in the source tree (CQRS+Bus, Event Sourcing, Saga) has a traceable ADR justification. No structural element AND no detected source-tree pattern lacks an ADR rationale. | **BLOCKER** |
 | G2 | No two ADRs contradict each other. If one supersedes another, the superseded ADR is marked `Superseded by ADR-{NNN}` AND the new ADR carries `Supersedes: ADR-{MMM}` — bidirectional link enforced. | BLOCKER |
 | G10 | A `consistency-matrix-{story}.md` exists for every story under design AND its `consistency-gate` cell is `PASS`. The back-propagation journal explains every rewrite. | BLOCKER |
 | G12 | For every row in `supersession-plan-{story}.md`: (a) the new ADR exists with `Supersedes: ADR-{MMM}`, (b) the superseded ADR's status line is `Superseded by ADR-{NNN}`, (c) no descriptive artefact still cites the superseded ADR as its source of truth. | BLOCKER |
+| G14 | No ADR documents a non-decision: filenames must not end in `-rejected.md`; Decision sections must not start with `We will not`, `We reject`, or `We avoid` UNLESS the rejected pattern is actually present in the source tree (per Phase 7.0 grep). A negative ADR for an absent pattern is a non-decision artefact. | BLOCKER |
 
-**How to check G1:** For each aggregate, bounded context, pattern (CQRS, Event Sourcing, Saga) visible in diagrams — confirm an ADR exists that justifies its inclusion.
+**How to check G1:** Two-pass procedure. **Pass A (diagrams):** for each aggregate, bounded context, pattern (CQRS, Event Sourcing, Saga) visible in diagrams — confirm an ADR exists that justifies its inclusion. **Pass B (source tree):** run the Phase 7.0 grep signatures over the source tree — `ICommandBus|IQueryBus|CommandBus|QueryBus` (CQRS+Bus), `IEventStore|EventStream|Apply\(.*Event` (Event Sourcing), `Saga|ProcessManager|ICorrelatedBy` (Saga). For every hit, confirm an ADR exists that justifies the pattern's adoption. A pattern present in code but absent from ADRs is a G1 BLOCKER (architecture-by-accident).
+
+**How to check G14:** Two-pass procedure. **Pass A (filename):** `ls .skraft/sdlc/design/adr-*.md` — any filename ending in `-rejected.md` is an immediate BLOCKER (the rejection IS the artefact). **Pass B (Decision section):** read each ADR's Decision section. If it starts with `We will not`, `We reject`, or `We avoid`, run the Phase 7.0 grep for the rejected pattern over the source tree. If the grep returns zero hits, the ADR documents a non-decision (refusing something that isn't there) — BLOCKER. If the grep returns hits, the negative-phrased Decision is justified (documenting an active rejection of a pattern actually present in code) — pass.
 
 **How to check G2:** Cross-read all ADRs. Look for conflicting decisions on the same concept (same name, incompatible classification). For any `Superseded by` line, confirm the named successor ADR exists and carries the reciprocal `Supersedes:` line.
 
@@ -141,6 +144,7 @@ Evaluate gates:
 | G8 | Every **Command** has at least one corresponding domain event. Queries are exempt from this gate. No dangling commands. | HIGH |
 | G9 | No aggregate, bounded context, or Event Sourcing adoption is introduced without a traceable story justification (YAGNI). | MEDIUM |
 | G11 | For every ADR adopting a complexity-adding pattern from `{CQRS, Event Sourcing, Saga, eventual consistency, micro-service split, ACL}`: the Context section cites at least one admissible force, AND `Alternatives Rejected` contains a `"do without the pattern"` row evaluated on technical merits. `"Consistency with existing code"` alone is **not** admissible. | HIGH |
+| G15 | No ADR documents a baseline already enforced by project skills or architecture tests as if it were a free decision. Topics already baseline-enforced (CQS at method level, Clean Architecture layer boundaries, convention-based DI handler registration, repository pattern) require an EXTENSION ADR, not a restatement. | HIGH |
 
 **How to check G7:** For each story ID in `stories-{milestone}.md`, verify at least one Command OR Query in `event-model-{story}.md` or `contracts-{story}.md` references that story.
 
@@ -149,6 +153,8 @@ Evaluate gates:
 **How to check G9:** List all aggregates, bounded contexts, and patterns. For each, verify a story explicitly requires it. Flag any element that exists "in anticipation of future needs."
 
 **How to check G11:** Open each ADR that ratifies a complexity-adding pattern. Confirm the Context cites a force from the admissible list (read/write asymmetry; audit trail; cross-service transactional boundary; contention hotspot; regulatory-driven separation). Confirm the `Alternatives Rejected` table includes `"do without the pattern"` with technical reasoning. Finding is HIGH if either is missing.
+
+**How to check G15:** For each ADR, match the Decision title against the baseline list: CQS at method level, Clean Architecture layer boundaries, convention-based DI handler registration, repository pattern. If a Decision restates one of these as a free choice, cross-check whether the project enforces it via a skill (e.g., `clean-architecture-*`) OR an architecture test (`*Architecture*Tests*.cs`, `*ArchitectureTest*.java`, `.dependency-cruiser.*`). If the baseline IS enforced, the ADR is a restatement — HIGH finding. EXTENSION ADRs on top of the baseline are allowed and do not fire (e.g., `Introduce a CQRS Dispatch Bus`, `Add pipeline behaviors`).
 ---
 
 ### Phase 3: SYNTHESIZE + VERDICT

@@ -1,13 +1,13 @@
 ---
 name: architecture-review-criteria
-description: Use when reviewing DESIGN artefacts (event models, ADRs, component diagrams, context maps, interface contracts) for quality, DDD compliance, and architectural correctness. Contains gate definitions and scoring rubric for the solution-architect-reviewer lenses.
+description: Use when reviewing DESIGN artefacts (event models, ADRs, component diagrams, context maps, interface contracts) for quality, DDD compliance, architectural correctness, and prohibition of negative or baseline-restating ADRs. Contains gate definitions and scoring rubric for the solution-architect-reviewer lenses.
 ---
 
 # Architecture Review Criteria
 
 ## Overview
 
-13 gates across 3 lenses, applied by the `solution-architect-reviewer` agent to DESIGN artefacts. Gates enforce DDD correctness, Clean Architecture compliance, persona-side consistency gate integrity, and fitness for the stories in scope.
+15 gates across 3 lenses, applied by the `solution-architect-reviewer` agent to DESIGN artefacts. Gates enforce DDD correctness, Clean Architecture compliance, persona-side consistency gate integrity, prohibition of negative or baseline-restating ADRs, and fitness for the stories in scope.
 
 **Applied by:** `solution-architect-reviewer`
 **Applied to:** ADRs, event models, component diagrams, context maps, interface contracts, consistency matrices, supersession plans, blocker files
@@ -23,10 +23,11 @@ Evaluates: ADRs + diagrams + contracts + consistency-matrix + supersession-plan 
 
 | Gate | Definition | Pass condition | Severity |
 |---|---|---|---|
-| G1 | Every structural element in a diagram (aggregate, bounded context, pattern) has a traceable ADR justification. No element exists without an architectural rationale. | All structural elements in all diagrams reference at least one ADR. | **BLOCKER** |
+| G1 | Every structural element in a diagram (aggregate, bounded context, pattern) AND every complexity-adding pattern actually present in the source tree (CQRS+Bus, Event Sourcing, Saga) has a traceable ADR justification. No element exists without an architectural rationale. | All structural elements in all diagrams AND all detected source-tree patterns reference at least one ADR. | **BLOCKER** |
 | G2 | No two ADRs contradict each other. Supersession links are bidirectional: superseded ADR carries `Superseded by ADR-{NNN}`; new ADR carries `Supersedes: ADR-{MMM}`. | Zero contradicting decisions across all ADRs. Zero broken supersession links. | BLOCKER |
 | G10 | A `consistency-matrix-{story}.md` exists for every story under design and its `consistency-gate` cell is `PASS`. The back-propagation journal explains every rewrite. | Matrix file present and PASS for every story; journal complete. | BLOCKER |
 | G12 | Every row in `supersession-plan-{story}.md` is fully realised: bidirectional ADR links present, AND no descriptive artefact still cites the superseded ADR. | Plan rows = realised supersessions; zero stale citations. | BLOCKER |
+| G14 | No ADR documents a non-decision: filenames must not end in `-rejected.md`; Decision sections must not start with `We will not`, `We reject`, or `We avoid` UNLESS the rejected pattern is actually present in the source tree (per Phase 7.0 grep). A negative ADR for an absent pattern is a non-decision artefact. | Zero `*-rejected.md` files; zero negative-phrased Decisions whose target pattern is absent from the source tree. | BLOCKER |
 
 ### Lens 2 — architecture-compliance-lens
 
@@ -49,6 +50,7 @@ Evaluates: diagrams + contracts + stories + ADRs
 | G8 | Every Command in contracts has at least one corresponding domain event. Queries are exempt. No dangling commands. | Zero Commands without a corresponding domain event. | HIGH |
 | G9 | No aggregate, bounded context, Event Sourcing adoption, or Saga is introduced without a traceable story justification. | Zero unjustified architectural elements. Every element traces back to a story ID. | MEDIUM |
 | G11 | Every ADR adopting a complexity-adding pattern (`CQRS`, `Event Sourcing`, `Saga`, `eventual consistency`, `micro-service split`, `ACL`) cites at least one admissible force in Context AND includes `"do without the pattern"` in Alternatives Rejected. `"Consistency with existing code"` alone is **not** admissible. | All such ADRs pass both checks. | HIGH |
+| G15 | No ADR documents a baseline already enforced by project skills or architecture tests as if it were a free decision. Topics already baseline-enforced (CQS at method level, Clean Architecture layer boundaries, convention-based DI handler registration, repository pattern) require an EXTENSION ADR (e.g., `Introduce a CQRS Dispatch Bus on top of CQS baseline`, `Add pipeline behaviors`), not a restatement. | Zero ADRs whose Decision merely restates a baseline already enforced by a project skill or architecture test. | HIGH |
 
 ### Cross-cutting — escalation gate
 
