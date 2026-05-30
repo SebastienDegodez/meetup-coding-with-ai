@@ -1,5 +1,7 @@
 ---
-engine: copilot
+engine:
+  id: copilot
+  model: claude-haiku-4.5
 description: |
   Adversarial reviewer of DISCOVER artefacts (triage report + sprint proposal).
   Dispatches backlog-planner on approval, or retries backlog-discoverer.

@@ -1,5 +1,7 @@
 ---
-engine: copilot
+engine:
+  id: copilot
+  model: claude-haiku-4.5
 description: |
   Software-engineer-reviewer agent for the skraft SDLC pipeline.
   Triggered by workflow_dispatch from software-engineer. Audits the PR

@@ -1,5 +1,7 @@
 ---
-engine: copilot
+engine:
+  id: copilot
+  model: claude-haiku-4.5
 description: |
   Adversarial reviewer of DESIGN artefacts (ADRs + diagrams + interface contracts).
   Dispatches acceptance-designer on approval, or retries solution-architect.

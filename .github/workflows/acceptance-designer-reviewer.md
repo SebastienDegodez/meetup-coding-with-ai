@@ -1,5 +1,7 @@
 ---
-engine: copilot
+engine:
+  id: copilot
+  model: claude-haiku-4.5
 description: |
   Adversarial reviewer of DISTILL artefacts (feature files + test-plan + impl-plan).
   Dispatches software-engineer on approval, or retries acceptance-designer.

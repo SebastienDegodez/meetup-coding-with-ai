@@ -1,5 +1,7 @@
 ---
-engine: copilot
+engine:
+  id: copilot
+  model: claude-haiku-4.5
 description: |
   Adversarial reviewer of DISCUSS artefacts (stories + acceptance criteria).
   Dispatches solution-architect on approval, or retries backlog-planner.
