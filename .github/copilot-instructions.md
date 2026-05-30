@@ -7,3 +7,6 @@
 - FakeItEasy for mocking
 - NetArchTest.Rules for architecture validation
 - Microsoft.Extensions.DependencyInjection for DI
+
+## ADR
+Les ADR sont écrits en français.
