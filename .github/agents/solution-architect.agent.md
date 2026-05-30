@@ -158,12 +158,27 @@ Produce `diagrams-{story}.md` using the template at [`../skills/architecture-pat
 
 Write one ADR per structural decision. Number sequentially from `adr-001-`.
 
-**Mandatory ADR topics:**
-- CQRS decision (apply or not, with justification)
-- Aggregate boundary choices (one ADR per non-obvious boundary)
-- Event Sourcing decision (apply the heuristic: only if audit trail or temporal queries are needed)
-- Bounded context boundaries (one ADR per context split decision)
-- **Every entry in `supersession-plan-{story}.md`** — one new ADR per row.
+**Baseline patterns — NEVER an ADR topic (G15):**
+CQS at method level, Clean Architecture layer boundaries, convention-based DI registration, repository pattern. These are enforced by project skills and architecture tests; an ADR that merely restates the baseline is forbidden.
+
+**Story-triggered ADRs — write IFF a story or measurable force in this batch raised the question:**
+For each candidate pattern below, ask: *"Did a story in this batch raise this question, or does a measured / contractual force require evaluating it?"*
+- **NO** → write no ADR. The pattern is out of scope until a future story raises it. Silence = default (baseline applies). Spending an ADR slot on an unraised question is a non-decision artefact (G14).
+- **YES** → evaluate it. Write `adr-NNN-{pattern-subject}.md` (slug names the SUBJECT, never the verdict — see G14). Status starts as `Proposed`; final status is `Accepted` (adopted) or `Rejected` (evaluated and declined, with the chosen alternative listed in `Alternatives Rejected`).
+
+Candidate patterns: CQRS dispatch bus, Event Sourcing, Saga, eventual consistency, micro-service split, Anti-Corruption Layer.
+
+**Always-write ADRs (one per row):**
+- One ADR per non-obvious aggregate boundary
+- One ADR per bounded-context split decision
+- One ADR per row in `supersession-plan-{story}.md`
+
+**Human-in-the-loop ratification (Proposed → Accepted | Rejected):**
+Every story-triggered ADR is committed with `Status: Proposed`, then a human ratifies it.
+- **Agentic workflow (GitHub):** post a comment on the originating issue listing each Proposed ADR with a one-line summary and a request for `accept` / `reject` (with rationale). After the human responds, flip the status, commit the change.
+- **Local developer machine:** prompt the developer in-terminal for each Proposed ADR. After the developer answers, flip the status, commit the change.
+
+Both the `Proposed` revision and the final `Accepted` / `Rejected` revision MUST land in git history. Do not skip the `Proposed` commit — the trail of "we paused for a human here" is part of the architectural record.
 
 **Supersession write-side (bidirectional, mandatory when the plan is non-empty):**
 For each row in `supersession-plan-{story}.md`:
@@ -176,7 +191,9 @@ Both sides MUST be linked. Phase 9's matrix verifies that no superseded ADR is s
 - Context explains the "why" — forces that made the decision necessary
 - Consequences include negatives — no trade-off-free decisions
 - Alternatives are genuinely evaluated — not strawmen
-- **PATTERN-NECESSITY** — if the decision adopts a complexity-adding pattern from the set `{CQRS, Event Sourcing, Saga, eventual consistency, micro-service split, Anti-Corruption Layer}`, the Context section MUST cite at least one of the following forces: read/write asymmetry requiring separate stores; audit trail or temporal-query requirement; cross-service transactional boundary; contention hotspot under measured load; regulatory-driven separation. `"Consistency with existing code"` is **not** an admissible force on its own. The `Alternatives Rejected` section MUST contain a row `"do without the pattern"` evaluated on technical merits.
+- **PATTERN-NECESSITY** — if the decision adopts a complexity-adding pattern from the set `{CQRS, Event Sourcing, Saga, eventual consistency, micro-service split, Anti-Corruption Layer}`, the Context section MUST cite at least one of the following forces: read/write asymmetry requiring separate stores; audit trail or temporal-query requirement; cross-service transactional boundary; contention hotspot under measured OR projected load with a **quantified threshold** (e.g., "≥ 100 req/s sustained"); regulatory-driven separation. `"Consistency with existing code"` and speculative forces without a metric (`"might have many users"`, `"in case we scale"`) are **not** admissible. The `Alternatives Rejected` section MUST contain a row `"do without the pattern"` evaluated on technical merits.
+
+  When the forces are speculative or no admissible force can be cited, the correct outcome is a `Status: Rejected` ADR (if a story raised the question) documenting that adoption is declined pending measured evidence. If no story raised the question, write no ADR at all.
 
 ### Phase 8: INTERFACE CONTRACTS
 

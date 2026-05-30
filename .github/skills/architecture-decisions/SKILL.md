@@ -22,7 +22,7 @@ Architecture Decision Records (ADRs) are lightweight documents that capture arch
 ```markdown
 # ADR-{NNN}: {Short Title}
 
-**Status:** Proposed | Accepted | Deprecated | Superseded by ADR-{NNN}
+**Status:** Proposed | Accepted | Rejected | Deprecated | Superseded by ADR-{NNN}
 **Date:** {YYYY-MM-DD}
 
 ## Context
@@ -102,11 +102,12 @@ We will apply simple CQRS: separate command handlers (mutate state, raise events
 Examples:
 - `adr-001-cqrs-eligibility.md`
 - `adr-002-aggregate-boundary-eligibility.md`
-- `adr-003-event-sourcing-rejected.md`
+- `adr-003-event-sourcing.md` *(slug names the topic; verdict lives in the `Status:` field — `Accepted` or `Rejected`)*
 
 Rules:
 - Numbers are three digits, zero-padded: `001`, not `1`
 - Slugs are lowercase kebab-case, derived from the short title
+- **Slugs name the SUBJECT, never the verdict.** Forbidden suffixes: `-rejected`, `-accepted`, `-deprecated`, `-superseded`. The verdict lives in `Status:`.
 - Gaps in numbering are forbidden — never skip a number
 - Numbers are never reused — a deprecated ADR keeps its number
 
@@ -115,12 +116,13 @@ Rules:
 ## Status and Lifecycle
 
 ```
-Proposed → Accepted → Deprecated
-                   → Superseded by ADR-{NNN}
+Proposed → Accepted   → Deprecated
+        ↘ Rejected    → Superseded by ADR-{NNN}
 ```
 
-- **Proposed:** Decision is drafted but not yet ratified
-- **Accepted:** Decision is in effect — the architecture reflects it
+- **Proposed:** Decision is drafted, committed, and awaiting human ratification
+- **Accepted:** Option was evaluated and adopted — the architecture reflects it
+- **Rejected:** Option was evaluated and explicitly declined — the ADR records the analysis so the debate is not re-run later without new evidence
 - **Deprecated:** Decision is no longer relevant (e.g., the feature was removed), but was never superseded
 - **Superseded:** Decision has been replaced by a newer one — always reference the successor
 
@@ -129,6 +131,24 @@ Proposed → Accepted → Deprecated
 - ADR-002 context: reference ADR-001 — "This supersedes ADR-001, which prescribed X."
 
 **No ADR is ever deleted.** The historical record of why a decision was made is as valuable as the decision itself.
+
+### Human-in-the-loop ratification
+
+The `Proposed → Accepted | Rejected` transition is owned by a human, not the agent. Two channels:
+
+- **Agentic workflow (GitHub):** the Proposed ADR is committed and the agent posts a ratification request as a comment on the originating issue. Human replies with `accept` or `reject` (with rationale). Agent then commits the status flip.
+- **Local developer machine:** the Proposed ADR is committed and the agent prompts the developer in-terminal. Developer answers; agent commits the status flip.
+
+**Both transitions are committed:** the `Proposed` revision AND the final `Accepted` / `Rejected` revision land in git history. The trail of "we paused here for a human" is part of the architectural record.
+
+### Rejected ADRs
+
+A `Rejected` ADR documents that an option was seriously evaluated and the team decided NOT to adopt it. The ADR exists so the same debate is not re-opened in six months without new evidence.
+
+- **Filename:** named after the SUBJECT — `adr-NNN-event-sourcing.md`, NEVER `adr-NNN-event-sourcing-rejected.md`. The verdict lives in `Status:`, not in the filename.
+- **Decision phrasing:** MAY start with "We will not adopt X because…" — this is precisely what a `Rejected` status means.
+- **Trigger requirement:** a `Rejected` ADR is written ONLY when a story or measurable force in the current batch raised the question (see G9 traceability). A `Rejected` ADR with no triggering story is a non-decision artefact and is forbidden.
+- **Alternatives Rejected section** is flipped: list what the team adopted INSTEAD (e.g., "state-based persistence with audit-log table").
 
 ---
 
