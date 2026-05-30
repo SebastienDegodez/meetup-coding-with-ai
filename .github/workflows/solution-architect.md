@@ -115,3 +115,18 @@ After executing the full protocol, dispatch `solution-architect-reviewer` with:
 - `working_branch`: ${{ github.event.inputs.working_branch }}
 
 Dispatch is allowed only after the Persistence Contract succeeds.
+
+## Human-in-the-loop ADR ratification (GitHub channel)
+
+The DESIGN phase commits every story-triggered ADR first with `Status: Proposed`. The `Proposed → Accepted | Rejected` transition is owned by a human. In this workflow (agentic pipeline), the channel is the originating GitHub issue:
+
+1. **After** the Persistence Contract succeeds and **before** dispatching the reviewer, list every newly written ADR in `.skraft/sdlc/design/` whose `Status:` line reads `Proposed`.
+2. If at least one Proposed ADR exists, post **one** comment (via `add-comment`, target = issue #${{ github.event.inputs.issue_number }}) summarising them. The comment MUST contain, for each Proposed ADR:
+   - The ADR file path (e.g. `.skraft/sdlc/design/adr-003-event-sourcing.md`)
+   - A one-line summary of the Decision
+   - A request: "Reply with `/adr-accept adr-003` or `/adr-reject adr-003 <rationale>` to ratify."
+3. The comment ends with: "`solution-architect-reviewer` will run on the current revisions; ratification commits (status flips) will land in a follow-up workflow."
+4. **Dispatch the reviewer anyway** — the reviewer audits structure on the `Proposed` revisions. The status flip happens in a separate workflow triggered by the human reply (out of scope for this workflow).
+5. If no Proposed ADR exists (the design pass produced only `Accepted` ADRs already, e.g. supersession-only passes), skip steps 2–3 and dispatch the reviewer directly.
+
+**Why post then dispatch (not block-and-wait):** GitHub Actions `workflow_dispatch` runs are bounded by `timeout-minutes: 15`. Async human ratification cannot block the run. The `Proposed` ADRs are already on the branch and reviewable; the reviewer's verdict on structure is independent from the human's verdict on adoption.

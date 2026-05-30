@@ -173,10 +173,11 @@ Candidate patterns: CQRS dispatch bus, Event Sourcing, Saga, eventual consistenc
 - One ADR per bounded-context split decision
 - One ADR per row in `supersession-plan-{story}.md`
 
-**Human-in-the-loop ratification (Proposed → Accepted | Rejected):**
-Every story-triggered ADR is committed with `Status: Proposed`, then a human ratifies it.
-- **Agentic workflow (GitHub):** post a comment on the originating issue listing each Proposed ADR with a one-line summary and a request for `accept` / `reject` (with rationale). After the human responds, flip the status, commit the change.
-- **Local developer machine:** prompt the developer in-terminal for each Proposed ADR. After the developer answers, flip the status, commit the change.
+#### Step 7.5 — HUMAN-IN-THE-LOOP RATIFICATION (Proposed → Accepted | Rejected)
+
+Every story-triggered ADR is committed first with `Status: Proposed`, then a human ratifies it. The agent owns the drafting; the human owns the verdict.
+
+The ratification channel is provided by the execution context — the orchestrating workflow specifies it when running in the agentic pipeline; in standalone local runs, prompt the developer in-terminal. The agent's responsibility is to commit the `Proposed` revision and, after the human verdict, commit the status flip.
 
 Both the `Proposed` revision and the final `Accepted` / `Rejected` revision MUST land in git history. Do not skip the `Proposed` commit — the trail of "we paused for a human here" is part of the architectural record.
 

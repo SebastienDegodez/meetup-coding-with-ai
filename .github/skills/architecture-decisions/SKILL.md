@@ -134,10 +134,7 @@ Proposed → Accepted   → Deprecated
 
 ### Human-in-the-loop ratification
 
-The `Proposed → Accepted | Rejected` transition is owned by a human, not the agent. Two channels:
-
-- **Agentic workflow (GitHub):** the Proposed ADR is committed and the agent posts a ratification request as a comment on the originating issue. Human replies with `accept` or `reject` (with rationale). Agent then commits the status flip.
-- **Local developer machine:** the Proposed ADR is committed and the agent prompts the developer in-terminal. Developer answers; agent commits the status flip.
+The `Proposed → Accepted | Rejected` transition is owned by a human, not the agent. The ratification channel is supplied by the execution context (the orchestrating workflow when running in an agentic pipeline, or an in-terminal prompt when running locally) — this skill does not prescribe the channel.
 
 **Both transitions are committed:** the `Proposed` revision AND the final `Accepted` / `Rejected` revision land in git history. The trail of "we paused here for a human" is part of the architectural record.
 
