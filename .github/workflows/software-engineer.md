@@ -109,9 +109,13 @@ source: SebastienDegodez/agentic-project-demo/catalog/skraft-pipeline/software-e
 
 This workflow guarantees persistence before reviewer dispatch:
 
-1. Apply implementation changes and update the PR branch (`create-pull-request` or `push-to-pull-request-branch`).
-2. Confirm changes are persisted remotely (not local-only).
-3. Treat any push/auth/write failure as BLOCKED:
+1. **Before writing code**, call the GitHub API to check if a PR already exists for `working_branch`:
+   - `GET /repos/{owner}/{repo}/pulls?head={owner}:{working_branch}&state=open`
+   - If a PR exists → use **only** `push-to-pull-request-branch` (never `create-pull-request`).
+   - If no PR exists → use `create-pull-request` to open the PR, then `push-to-pull-request-branch` for any subsequent iteration.
+2. Apply implementation changes and update the PR branch.
+3. Confirm changes are persisted remotely (not local-only).
+4. Treat any push/auth/write failure as BLOCKED:
   - add label `state:blocked`
   - post one concise blocker comment
   - do **not** dispatch `software-engineer-reviewer`
