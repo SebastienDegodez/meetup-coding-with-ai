@@ -11,9 +11,9 @@ public class EligibilityPolicyTests
     // ── Age boundaries ──────────────────────────────────────────────────────
 
     [Fact]
-    public void Evaluate_WhenDriverTurns18ExactlyToday_ReturnsAccepted()
+    public void Evaluate_WhenDriverTurns21ExactlyToday_ReturnsAccepted()
     {
-        var driver = new Driver(Today.AddYears(-18), licenseYears: 2);
+        var driver = new Driver(Today.AddYears(-21), licenseYears: 2);
         var vehicle = new Vehicle(VehicleType.Car, power: null);
 
         var result = _policy.Evaluate(driver, vehicle, Today);
@@ -23,10 +23,29 @@ public class EligibilityPolicyTests
     }
 
     [Fact]
-    public void Evaluate_WhenDriverTurns18Tomorrow_ReturnsRefused()
+    public void Evaluate_WhenDriverTurns21Tomorrow_ReturnsRefused()
     {
-        var driver = new Driver(Today.AddYears(-18).AddDays(1), licenseYears: 2);
+        var driver = new Driver(Today.AddYears(-21).AddDays(1), licenseYears: 2);
         var vehicle = new Vehicle(VehicleType.Car, power: null);
+
+        var result = _policy.Evaluate(driver, vehicle, Today);
+
+        var (wasAccepted, capturedReason) = result.Match(
+            onAccepted: () => (true, (string?)null),
+            onRefused: r => (false, (string?)r));
+        Assert.False(wasAccepted);
+        Assert.Equal("Conducteur trop jeune pour ce véhicule", capturedReason);
+    }
+
+    // AC-01, AC-03, AC-04 — drivers below the new legal minimum age (21) must be refused
+    [Theory]
+    [InlineData(20, VehicleType.Car)]
+    [InlineData(20, VehicleType.Motorcycle)]
+    [InlineData(18, VehicleType.Car)]
+    public void Evaluate_WhenDriverBelowNewLegalAge_ReturnsRefused(int age, VehicleType vehicleType)
+    {
+        var driver = new Driver(Today.AddYears(-age), licenseYears: 10);
+        var vehicle = new Vehicle(vehicleType, power: null);
 
         var result = _policy.Evaluate(driver, vehicle, Today);
 
