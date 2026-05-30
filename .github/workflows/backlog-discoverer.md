@@ -72,7 +72,7 @@ safe-outputs:
     preserve-branch-name: true
     recreate-ref: true
     auto-close-issue: true
-    base-branch: main
+    base-branch: feat/solution-architect-consistency-matrix
     protected-files:
       policy: blocked
       exclude:

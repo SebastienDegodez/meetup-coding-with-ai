@@ -69,7 +69,7 @@ safe-outputs:
     draft: true
     preserve-branch-name: true
     recreate-ref: true
-    base-branch: main
+    base-branch: feat/solution-architect-consistency-matrix
     max: 1
     protected-files:
       policy: blocked
