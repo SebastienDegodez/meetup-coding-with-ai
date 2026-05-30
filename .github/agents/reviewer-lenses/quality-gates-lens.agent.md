@@ -1,7 +1,7 @@
 ---
 name: quality-gates-lens
 description: "Reviewer lens: verifies factual quality gates (tests pass, build OK, mutation score, conventional commits) from engineer artifacts."
-model: inherit
+model: claude-haiku-4.5
 tools: read/readFile, search/codebase
 ---
 

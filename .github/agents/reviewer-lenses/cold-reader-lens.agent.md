@@ -1,7 +1,7 @@
 ---
 name: cold-reader-lens
 description: "Reviewer lens: reads code and tests with zero prior context. Verifies business language, naming clarity, and intent visibility."
-model: inherit
+model: claude-haiku-4.5
 tools: read/readFile, search/codebase
 ---
 

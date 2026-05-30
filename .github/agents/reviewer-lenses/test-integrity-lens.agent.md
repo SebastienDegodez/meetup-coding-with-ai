@@ -1,7 +1,7 @@
 ---
 name: test-integrity-lens
 description: "Reviewer lens: detects test theater patterns and Iron Rule violations in test code."
-model: inherit
+model: claude-haiku-4.5
 tools: read/readFile, search/codebase
 ---
 
