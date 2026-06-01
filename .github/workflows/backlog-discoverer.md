@@ -4,8 +4,9 @@ description: |
   Autonomous backlog grooming agent. Independent of the delivery pipeline:
   it NEVER advances the SDLC state and NEVER dispatches the next phase.
   On `issues: opened` it triages a single issue (labels only, no sprint change).
-  On `workflow_dispatch` with a free-text `objective` it searches matching
-  issues and produces a sprint PROPOSAL artefact (fill-only, no eviction, no
+  On `workflow_dispatch` it produces a sprint PROPOSAL: from the given `objective`,
+  or — when no `objective` and no `issue_number` are provided — from an inferred
+  objective derived from the prioritized open backlog (fill-only, no eviction, no
   milestone is written — the human decides the final sprint).
 
 on:
@@ -18,7 +19,7 @@ on:
         required: false
         type: string
       objective:
-        description: "Free-text sprint objective. The discoverer finds matching issues and builds a sprint PROPOSAL (no milestone is written)."
+        description: "Free-text sprint objective. Optional: if empty (and no issue_number), the discoverer infers an objective from the prioritized open backlog. Builds a sprint PROPOSAL (no milestone is written)."
         required: false
         type: string
       working_branch:
@@ -98,15 +99,18 @@ the orchestrator).
 
 ## Activation Guard
 
-You MUST call `noop` and stop immediately if:
+There is no hard skip for manual runs. Route by trigger and inputs:
 
-1. **Event is `workflow_dispatch` AND both `issue_number` and `objective` are empty**
-  - Manual grooming requires at least one target.
-  - Message: "Skipping: provide either issue_number (single issue) or objective (free-text sprint goal)."
+- **`issues: opened`** → always single-issue triage (Politique A).
+- **`workflow_dispatch` with `issue_number`** → single-issue triage (Politique A).
+- **`workflow_dispatch` with `objective` (no issue_number)** → sprint proposal on that objective (Politique B).
+- **`workflow_dispatch` with neither `objective` nor `issue_number`** → sprint
+  proposal with an **inferred objective** derived from the prioritized open
+  backlog (Politique B, default proposal).
 
-For `issues: opened` events, always proceed to single-issue triage (Politique A).
-
-If the guard condition is true, call `noop` with the message and stop. Do NOT proceed to initialization or any other phase.
+The only case to `noop` and stop: `workflow_dispatch` with `issue_number`
+resolving to an issue that already carries a `state:*` label (already in the
+delivery pipeline) — see Scenario 1, step 2.
 
 ## Initialization: Ensure directory structure
 
@@ -150,16 +154,26 @@ Triage one issue. **Touch no sprint, evict nothing, advance no state.**
 
 5. **Stop.** No state label, no dispatch. The human starts the pipeline later.
 
-### Scenario 2: Sprint Proposal — Politique B (from `workflow_dispatch` with `objective`)
+### Scenario 2: Sprint Proposal — Politique B (from `workflow_dispatch` with `objective`, or with neither `objective` nor `issue_number`)
 
-Build a sprint PROPOSAL from a free-text objective. **Fill-only: never evict,
-never write a milestone — propose only.**
+Build a sprint PROPOSAL. **Fill-only: never evict, never write a milestone —
+propose only.**
 
-1. **Search query**: derive search qualifiers from the free-text `objective`
-   (keywords, labels) and run `is:open is:issue` discovery.
+0. **Resolve the objective**:
+   - If `objective` is provided, use it as-is.
+   - If `objective` is empty (manual run with no issue and no objective), **infer
+     an objective** from the prioritized open backlog: scan open issues without a
+     `state:*` label, group by dominant theme (top labels / highest-priority
+     cluster), and synthesize a one-line objective (e.g. "Sprint priorité haute :
+     {thème dominant}"). Record the inferred objective in the proposal so the
+     human sees what was assumed.
+
+1. **Search query**: derive search qualifiers from the (provided or inferred)
+   objective (keywords, labels) and run `is:open is:issue` discovery. With an
+   inferred objective, rank the full open backlog by priority then effort.
 
 2. **Guard against empty result**: if the query returns 0 issues, call `noop`
-   with message "No open issues match objective: {objective}."
+   with message "No open issues to build a sprint proposal."
 
 3. **Triage + pack**: execute the triage protocol (Phase 1–5), then pack a
    capacity-bounded sprint greedily by priority (fill-only).
@@ -169,7 +183,8 @@ never write a milestone — propose only.**
 
 4. **Persist artefacts** to `.skraft/sdlc/discover/` (repo-relative):
    - `triage-{YYYY-MM-DD}.md` — full triage report
-   - `sprint-proposal.md` — sprint **proposal** (overwrites previous run)
+   - `sprint-proposal.md` — sprint **proposal** (overwrites previous run),
+     including the resolved/inferred objective
 
 5. **Post the proposal as a comment** so the human can apply it. Do NOT create or
    assign any milestone. **Stop.** No state label, no dispatch.
