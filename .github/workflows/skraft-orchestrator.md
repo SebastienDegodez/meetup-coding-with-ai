@@ -1,9 +1,11 @@
 ---
 engine: copilot
 description: |
-  Pipeline orchestrator for the skraft SDLC pipeline. Can be triggered
-  manually (workflow_dispatch) or via /sdlc slash command on any issue.
-  Reads pipeline state from labels and dispatches the appropriate workflow.
+  Pipeline orchestrator for the skraft SDLC delivery pipeline. Started by a
+  human on a chosen issue via the `sdlc` label, the `/sdlc` slash command, or
+  workflow_dispatch. Reads pipeline state from labels and dispatches the
+  appropriate workflow. The pipeline starts directly at DISCUSS (planner) —
+  grooming/DISCOVER is a separate autonomous agent and is not part of this loop.
 
 on:
   workflow_dispatch:
@@ -29,7 +31,7 @@ on:
         default: ""
   issues:
     types: [labeled]
-    names: [human:handoff-next]
+    names: [human:handoff-next, sdlc]
   slash_command:
     name: sdlc
     events: [issue_comment]
@@ -63,17 +65,15 @@ safe-outputs:
     max: 2
     target: "*"
   add-labels:
-    allowed: [state:discover-needed, state:blocked, state:done]
+    allowed: [state:plan-needed, state:blocked, state:done]
     max: 2
     target: ${{ github.event.inputs.issue_number || github.event.issue.number }}
   remove-labels:
-    allowed: [state:blocked, state:human-approval-needed, human:handoff-next]
-    max: 3
+    allowed: [sdlc, state:blocked, state:human-approval-needed, human:handoff-next]
+    max: 4
     target: ${{ github.event.inputs.issue_number || github.event.issue.number }}
   dispatch-workflow:
     workflows:
-      - backlog-discoverer
-      - backlog-discoverer-reviewer
       - backlog-planner
       - backlog-planner-reviewer
       - solution-architect
@@ -107,9 +107,8 @@ source: SebastienDegodez/agentic-project-demo/catalog/skraft-pipeline/skraft-orc
 
 | Current label | Action |
 |---------------|--------|
-| _(no state label)_ | Fresh start → add `state:discover-needed` (in-progress lock), then dispatch `backlog-discoverer` with `issue_number` + `working_branch` |
-| `state:discover-needed` | DISCOVER already in progress. Post a status comment and do NOT dispatch — the running `backlog-discoverer` will remove this label when it completes. |
-| `state:plan-needed` | Dispatch `backlog-discoverer-reviewer` with `issue_number` + `story_type` + `working_branch` |
+| _(no state label)_ | Fresh start → resolve `working_branch` (see Working Branch Contract), add `state:plan-needed`, then dispatch `backlog-planner` with `issue_number` + `story_type` + `working_branch`. If the issue carries the `sdlc` trigger label, remove it. |
+| `state:plan-needed` | Dispatch `backlog-planner` with `issue_number` + `story_type` + `working_branch` |
 | `state:design-needed` | Dispatch `backlog-planner-reviewer` with `issue_number` + `story_type` + `working_branch` |
 | `state:distill-needed` | Dispatch `solution-architect-reviewer` with `issue_number` + `story_type` + `working_branch` |
 | `state:impl-needed` | Dispatch `acceptance-designer-reviewer` with `issue_number` + `story_type` + `working_branch` |
