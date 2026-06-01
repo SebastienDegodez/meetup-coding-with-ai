@@ -59,11 +59,11 @@ safe-outputs:
   add-labels:
     allowed: [state:plan-needed, state:blocked]
     max: 2
-    target: "*"
+    target: ${{ github.event.inputs.issue_number || github.event.issue.number }}
   remove-labels:
     allowed: [sdlc]
     max: 1
-    target: "*"
+    target: ${{ github.event.inputs.issue_number || github.event.issue.number }}
   dispatch-workflow:
     workflows: [backlog-discoverer-reviewer]
     max: 1

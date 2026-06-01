@@ -59,7 +59,7 @@ safe-outputs:
   add-labels:
     allowed: [state:blocked, state:human-approval-needed]
     max: 2
-    target: "*"
+    target: ${{ github.event.inputs.issue_number }}
   dispatch-workflow:
     workflows: [software-engineer, acceptance-designer]
     max: 1

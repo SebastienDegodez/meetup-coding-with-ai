@@ -79,11 +79,11 @@ safe-outputs:
   add-labels:
     allowed: [state:impl-needed, state:blocked]
     max: 2
-    target: "*"
+    target: ${{ github.event.inputs.issue_number }}
   remove-labels:
     allowed: [state:distill-needed]
     max: 1
-    target: "*"
+    target: ${{ github.event.inputs.issue_number }}
   dispatch-workflow:
     workflows: [acceptance-designer-reviewer]
     max: 1
