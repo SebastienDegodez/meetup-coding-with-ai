@@ -72,11 +72,11 @@ safe-outputs:
   add-labels:
     allowed: [state:done, state:impl-needed, state:blocked, state:human-approval-needed]
     max: 2
-    target: "*"
+    target: ${{ github.event.inputs.issue_number }}
   remove-labels:
     allowed: [state:review-needed]
     max: 1
-    target: "*"
+    target: ${{ github.event.inputs.issue_number }}
   dispatch-workflow:
     workflows: [software-engineer]
     max: 1
@@ -118,6 +118,8 @@ Steps:
 4. Only AFTER the comment has been emitted, submit the formal PR review and perform the verdict action from the table below.
 
 ## Verdict Actions
+
+> **Label field contract:** `add_labels` and `remove_labels` accept ONLY `item_number` (the numeric issue/PR id) — they do NOT accept `pull_request_number`. Always pass `item_number: ${{ github.event.inputs.issue_number }}`. Using `pull_request_number` here silently drops the target and fails with "No issue/PR number available". (`pull_request_number` is reserved for `add_comment` / `create_pull_request_review_comment`.)
 
 | Verdict | Action |
 |---------|--------|
