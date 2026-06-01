@@ -1,14 +1,12 @@
 ---
 engine: copilot
 description: |
-  Backlog-discoverer agent for the skraft SDLC pipeline. Triggered when
-  an issue is labelled `sdlc`. Triages the issue, detects story_type,
-  persists DISCOVER artefacts, and dispatches backlog-discoverer-reviewer.
+  Backlog-discoverer agent for the skraft SDLC pipeline. Dispatched by
+  skraft-orchestrator (never triggered directly by the `sdlc` label).
+  Triages the issue, detects story_type, persists DISCOVER artefacts,
+  and dispatches backlog-discoverer-reviewer.
 
 on:
-  issues:
-    types: [labeled]
-    names: [sdlc]           # Single-issue discovery on label
   workflow_dispatch:
     inputs:
       issue_number:
@@ -109,11 +107,7 @@ Dispatch is allowed only after remote persistence succeeds.
 
 You MUST call `noop` and stop immediately if:
 
-1. **Event is `labeled` AND label is not `sdlc`**
-   - This should not occur (trigger filter prevents it), but guard against it anyway.
-   - Message: "Skipping: triggering label is not sdlc"
-
-2. **Event is `workflow_dispatch` AND both `issue_number` and `milestone` are empty**
+1. **Event is `workflow_dispatch` AND both `issue_number` and `milestone` are empty**
   - Manual discovery requires at least one target.
   - Message: "Skipping: provide either issue_number (single issue) or milestone (batch discovery)."
 
@@ -140,9 +134,9 @@ If any are missing, create them. This action is silent — no output needed.
 
 Detect which scenario is active by checking the trigger event:
 
-### Scenario 1: Single-Issue (from `issues.labeled` or manual `workflow_dispatch`)
+### Scenario 1: Single-Issue (from `workflow_dispatch`, dispatched by skraft-orchestrator)
 
-When triggered by the `sdlc` label, or manually with `issue_number` (or `mode=user-assigned`):
+When dispatched with `issue_number` (or `mode=user-assigned`):
 
 1. **State Check**: If the issue already has any `state:*` label (other than `state:blocked`), stop — it was already processed.
 
@@ -162,7 +156,7 @@ When triggered by the `sdlc` label, or manually with `issue_number` (or `mode=us
    - `sprint-proposal.md` — sprint proposal (overwrites previous run)
 
 5. **Dispatch reviewer** with:
-  - `issue_number`: `${{ github.event.inputs.issue_number || github.event.issue.number }}`
+  - `issue_number`: `${{ github.event.inputs.issue_number }}`
    - `story_type`: (as detected in Phase 3 — `functional` or `technical`)
   - `working_branch`: `working_branch_resolved` (propagate unchanged)
 
