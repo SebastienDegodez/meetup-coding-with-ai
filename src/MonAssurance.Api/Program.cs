@@ -15,7 +15,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "MonAssurance API",
         Version = "v3",
-        Description = "Clean Architecture CQRS API for MonAssurance"
+        Description = "Clean Architecture API for MonAssurance"
     });
 });
 
