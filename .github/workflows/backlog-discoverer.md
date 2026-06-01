@@ -59,7 +59,7 @@ safe-outputs:
     max: 2
     target: ${{ github.event.inputs.issue_number || github.event.issue.number }}
   remove-labels:
-    allowed: [sdlc]
+    allowed: [state:discover-needed]
     max: 1
     target: ${{ github.event.inputs.issue_number || github.event.issue.number }}
   dispatch-workflow:
@@ -138,7 +138,7 @@ Detect which scenario is active by checking the trigger event:
 
 When dispatched with `issue_number` (or `mode=user-assigned`):
 
-1. **State Check**: If the issue already has any `state:*` label (other than `state:blocked`), stop — it was already processed.
+1. **State Check**: If the issue already has any `state:*` label other than `state:discover-needed` (the in-progress lock set by the orchestrator) or `state:blocked`, stop — it was already processed.
 
 2. **Resolve deterministic working branch**:
   - Fetch issue title via GitHub API.
@@ -155,7 +155,9 @@ When dispatched with `issue_number` (or `mode=user-assigned`):
    - `triage-{YYYY-MM-DD}.md` — full triage report
    - `sprint-proposal.md` — sprint proposal (overwrites previous run)
 
-5. **Dispatch reviewer** with:
+5. **Advance state**: remove the `state:discover-needed` in-progress lock and add `state:plan-needed` on the issue.
+
+6. **Dispatch reviewer** with:
   - `issue_number`: `${{ github.event.inputs.issue_number }}`
    - `story_type`: (as detected in Phase 3 — `functional` or `technical`)
   - `working_branch`: `working_branch_resolved` (propagate unchanged)

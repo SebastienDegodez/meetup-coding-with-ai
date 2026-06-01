@@ -63,7 +63,7 @@ safe-outputs:
     max: 2
     target: "*"
   add-labels:
-    allowed: [sdlc, state:blocked, state:done]
+    allowed: [state:discover-needed, state:blocked, state:done]
     max: 2
     target: ${{ github.event.inputs.issue_number || github.event.issue.number }}
   remove-labels:
@@ -107,7 +107,8 @@ source: SebastienDegodez/agentic-project-demo/catalog/skraft-pipeline/skraft-orc
 
 | Current label | Action |
 |---------------|--------|
-| _(no state label)_ | Fresh start → dispatch `backlog-discoverer` with `issue_number` (add `sdlc` first) |
+| _(no state label)_ | Fresh start → add `state:discover-needed` (in-progress lock), then dispatch `backlog-discoverer` with `issue_number` + `working_branch` |
+| `state:discover-needed` | DISCOVER already in progress. Post a status comment and do NOT dispatch — the running `backlog-discoverer` will remove this label when it completes. |
 | `state:plan-needed` | Dispatch `backlog-discoverer-reviewer` with `issue_number` + `story_type` + `working_branch` |
 | `state:design-needed` | Dispatch `backlog-planner-reviewer` with `issue_number` + `story_type` + `working_branch` |
 | `state:distill-needed` | Dispatch `solution-architect-reviewer` with `issue_number` + `story_type` + `working_branch` |
