@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-05-28T19:35:49.534620+00:00'
+generated_at: '2026-06-02T05:48:33.956570+00:00'
 apm_version: 0.15.0
 dependencies:
 - repo_url: affaan-m/everything-claude-code
@@ -29,3 +29,14 @@ dependencies:
   deployed_files:
   - .agents/skills/genesis
   content_hash: sha256:2fd036770146a1f0da12bed3dfc772a825a01fc9a22003cb58cb3f33a1247550
+- repo_url: github/gh-aw-mcpg
+  host: github.com
+  resolved_commit: c90766f6d0e2e00096a911b3afb20b05e3943b47
+  virtual_path: .github/agents/agentic-workflows.agent.md
+  is_virtual: true
+  package_type: apm_package
+  deployed_files:
+  - .github/agents/agentic-workflows.agent.md
+  deployed_file_hashes:
+    .github/agents/agentic-workflows.agent.md: sha256:ee007e6949d587ca8e712e9dc8c3621c30bd6d01311cb7d71d236ab8918f03b4
+  content_hash: sha256:fde554502bb9ad9fa51cc368ac2ede7ff032b3de2ed30a283083939c2c607416

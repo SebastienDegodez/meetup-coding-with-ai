@@ -6,9 +6,8 @@ dependencies:
   apm:
   - affaan-m/everything-claude-code/.agents/skills/frontend-slides
   - affaan-m/everything-claude-code/.agents/skills/e2e-testing
-  #- majiayu000/claude-skill-registry/skills/other/other/liquid-glass-design
-  #- sebastiendegodez/agentic-project-demo/.github/agents/acceptance-designer-reviewer.agent.md
   - danielmeppiel/genesis/skills/genesis
+  - github/gh-aw-mcpg/.github/agents/agentic-workflows.agent.md
   mcp: []
 includes: auto
 scripts: {}

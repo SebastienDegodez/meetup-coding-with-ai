@@ -139,7 +139,7 @@ Pass the produced artefacts to the reviewer agent. Do NOT summarize or interpret
 DELIVER runs the engineer↔reviewer loop directly:
 
 1. Read `impl-plan-{story}.md` from `.skraft/sdlc/distill/`.
-2. Dispatch `software-engineer` with the implementation plan. Include contract artefacts from `.skraft/sdlc/distill/contracts/` if present.
+2. Dispatch `software-engineer` with the implementation plan. Include contract artefacts from `.skraft/sdlc/design/contracts-{story}.md` if present.
 3. Dispatch `software-engineer-reviewer` on the produced code.
 4. Handle verdict (same retry logic: max 2 retries = 3 total attempts).
 5. On final `approved`: capture Playwright evidence if available, post final GitHub comment, mark pipeline complete.

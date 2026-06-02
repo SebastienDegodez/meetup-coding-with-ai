@@ -63,7 +63,7 @@ Load each skill before starting. Only announce missing ones: `[SKILL MISSING] {s
 
 ## Discovery Modes
 
-Three modes are available. Determine mode from user intent. Default to **user-assigned** if intent is unclear.
+Two modes are available. Determine mode from user intent. Default to **user-assigned** if intent is unclear.
 
 Always account for both modes in the triage report:
 - exactly 1 mode is **selected** for execution

@@ -28,6 +28,7 @@ on:
         description: "Optional branch override for manual replay (preferred format: sdlc/{issue_number}-{slug})."
         required: false
         type: string
+  reaction: eyes
 
 concurrency:
   group: skraft-discover-${{ github.event.inputs.issue_number || github.event.issue.number || github.event.inputs.milestone || github.run_id }}
@@ -78,6 +79,7 @@ safe-outputs:
       exclude:
         - .skraft/
         - .github/instructions/business-lexicon.instructions.md
+source: SebastienDegodez/agentic-project-demo/catalog/skraft-pipeline/backlog-discoverer.md@main
 ---
 
 # Backlog-Discoverer Agent
@@ -118,21 +120,6 @@ You MUST call `noop` and stop immediately if:
   - Message: "Skipping: provide either issue_number (single issue) or milestone (batch discovery)."
 
 If either condition is true, call `noop` with the appropriate message and stop. Do NOT proceed to initialization or any other phase.
-
-## Initialization: Ensure directory structure
-
-Before any other work, ensure the `.skraft/sdlc/` directory tree exists by creating `.gitkeep` files 
-in each phase directory (discover, discuss, design, distill, deliver) if they don't already exist. 
-This is a **one-time per-run check** — it prevents git bundle failures when persisting artefacts.
-
-**Files to ensure exist:**
-- `.skraft/sdlc/discover/.gitkeep`
-- `.skraft/sdlc/discuss/.gitkeep`
-- `.skraft/sdlc/design/.gitkeep`
-- `.skraft/sdlc/distill/.gitkeep`
-- `.skraft/sdlc/deliver/.gitkeep`
-
-If any are missing, create them. This action is silent — no output needed.
 
 ---
 

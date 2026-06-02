@@ -83,7 +83,7 @@ safe-outputs:
       - software-engineer
       - software-engineer-reviewer
     max: 1
-source: SebastienDegodez/agentic-project-demo/catalog/skraft-pipeline/skraft-orchestrator.md@17fad94bd0be08f537a35c5fc65ae4c01c4ccb84
+source: SebastienDegodez/agentic-project-demo/catalog/skraft-pipeline/skraft-orchestrator.md@main
 ---
 
 # skraft Pipeline Orchestrator
