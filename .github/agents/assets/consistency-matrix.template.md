@@ -24,7 +24,7 @@ The matrix is the supervised-execution artefact for the cross-artefact consisten
 
 **Story:** {story-id}
 **Date:** {YYYY-MM-DD}
-**Source of truth:** ADR set under `.skraft/sdlc/design/adr-*.md`
+**Source of truth:** ADR set under `docs/decisions-tactical/adr-*.md`
 
 ## Matrix
 
@@ -86,7 +86,7 @@ Emit to the orchestrator when `STRUCTURAL_DRIFT` fires, or when `CLASSIFICATION_
   "story": "{story-id}",
   "concept": "{concept-name}",
   "adr_says": "{adr-truth}",
-  "adr_path": ".skraft/sdlc/design/adr-{NNN}-{slug}.md",
+  "adr_path": "docs/decisions-tactical/adr-{NNN}-{slug}.md",
   "artefact_says": "{cell-value}",
   "artefact_path": ".skraft/sdlc/design/{artefact}-{story-id}.md",
   "cause": "STRUCTURAL_DRIFT | CLASSIFICATION_DRIFT (post-retry)",

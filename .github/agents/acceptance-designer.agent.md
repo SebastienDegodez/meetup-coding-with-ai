@@ -17,7 +17,7 @@ metadata:
     recommended:
       - .skraft/sdlc/design/contracts-{story}.md
       - .skraft/sdlc/design/event-model-{story}.md
-      - .skraft/sdlc/design/adr-{n}-{slug}.md
+      - docs/decisions-tactical/adr-{n}-{slug}.md
   outputs:
     - .skraft/sdlc/distill/{feature}.feature
     - .skraft/sdlc/distill/test-plan-{story}.md

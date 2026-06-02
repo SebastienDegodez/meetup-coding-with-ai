@@ -152,8 +152,10 @@ When triggered by the `sdlc` label, or manually with `issue_number` (or `mode=us
     - `bash .github/scripts/resolve-working-branch.sh --issue-number "{issue_number}" --issue-title "{issue_title}" --working-branch "{workflow_dispatch.inputs.working_branch}"`
   - Resolver guarantees:
     - provided `working_branch` stays source of truth after normalization
-    - otherwise branch is computed as `sdlc/{issue_number}-{slug}`
-  - Store the result as `working_branch_resolved`.
+    - if a `sdlc/{issue_number}-*` branch already exists on origin, that exact branch is reused (idempotent replay — title is ignored)
+    - otherwise branch is computed as `sdlc/{issue_number}-{slug}` with deterministic ASCII transliteration
+  - Store the verbatim stdout as `working_branch_resolved`.
+  - **SINGLE SOURCE OF TRUTH (non-negotiable):** `working_branch_resolved` is the ONLY branch name for this run. Commit/push and the created pull request MUST use this exact value, and the reviewer dispatch MUST pass this exact value. NEVER hand-craft or re-slugify a branch name from the title — a mismatch here breaks every downstream checkout.
 
 3. **Execute discovery protocol** for this single issue (Phase 1–6 in backlog-discoverer.agent.md)
 

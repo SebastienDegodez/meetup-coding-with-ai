@@ -22,7 +22,7 @@ metadata:
       - existing codebase architecture files
   outputs:
     - .skraft/sdlc/design/event-model-{story}.md
-    - .skraft/sdlc/design/adr-{n}-{slug}.md
+    - docs/decisions-tactical/adr-{n}-{slug}.md
     - .skraft/sdlc/design/diagrams-{story}.md
     - .skraft/sdlc/design/contracts-{story}.md
     - .skraft/sdlc/design/context-map.md
@@ -92,7 +92,7 @@ Scan the existing codebase for reusable architecture:
 
 ### Phase 3.5: ADR SUPERSESSION SCAN
 
-For every existing ADR under `.skraft/sdlc/design/adr-*.md` (status `Accepted`), check whether the current story set introduces a requirement that **invalidates** its decision. A decision is invalidated when:
+For every existing ADR under `docs/decisions-tactical/adr-*.md` (status `Accepted`), check whether the current story set introduces a requirement that **invalidates** its decision. A decision is invalidated when:
 - A concept previously classified one way must now be classified differently (e.g. `Driver` was ratified as `Value Object` because no aggregate owned its invariants; the new story introduces invariants requiring `DriverAggregate` as an `Aggregate Root`).
 - A pattern previously rejected is now required by a measurable force from Phase 7 F4 (e.g. CQRS rejected for lack of read/write asymmetry; new story introduces audit-trail requirement).
 - A bounded-context boundary previously drawn must now move (e.g. an invariant now spans two contexts that were independent).
@@ -156,7 +156,7 @@ Produce `diagrams-{story}.md` using the template at [`../skills/architecture-pat
 
 *Loads architecture-decisions skill — see ADR Template and quality checklist.*
 
-Write one ADR per structural decision. Number sequentially from `adr-001-`.
+All ADRs are written under `docs/decisions-tactical/` (durable, version-controlled — NOT under `.skraft/`, which holds regenerable derivatives). Write one ADR per structural decision. Number sequentially from `adr-001-`.
 
 **Baseline patterns — NEVER an ADR topic (G15):**
 CQS at method level, Clean Architecture layer boundaries, convention-based DI registration, repository pattern. These are enforced by project skills and architecture tests; an ADR that merely restates the baseline is forbidden.

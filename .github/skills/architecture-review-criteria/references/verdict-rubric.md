@@ -112,8 +112,8 @@ lenses:
       - gate: G2
         severity: BLOCKER
         artefact:
-          - .skraft/sdlc/design/adr-001-cqrs-eligibility.md
-          - .skraft/sdlc/design/adr-005-unified-model-eligibility.md
+          - docs/decisions-tactical/adr-001-cqrs-eligibility.md
+          - docs/decisions-tactical/adr-005-unified-model-eligibility.md
         description: "ADR-001 (status: Accepted) prescribes CQRS for the eligibility check — separate command and query models. ADR-005 (status: Accepted) prescribes a single unified model for eligibility, stating that the read and write shapes are identical and CQRS is not needed. Both ADRs are status Accepted and apply to the same scope (EligibilityContext). This is a direct contradiction. The architecture cannot be implemented consistently until this is resolved."
   architecture-compliance:
     status: pass

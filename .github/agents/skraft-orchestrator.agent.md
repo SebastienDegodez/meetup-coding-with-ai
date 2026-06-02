@@ -130,7 +130,7 @@ Pass the produced artefacts to the reviewer agent. Do NOT summarize or interpret
 |---|---|---|---|
 | DISCOVER | `backlog-discoverer` | `backlog-discoverer-reviewer` | `.skraft/sdlc/discover/triage-*.md`, `sprint-proposal.md` |
 | DISCUSS | `backlog-planner` | `backlog-planner-reviewer` | `.skraft/sdlc/discuss/stories-*.md` |
-| DESIGN | `solution-architect` | `solution-architect-reviewer` | `.skraft/sdlc/design/adr-*.md`, `contracts-*.md` |
+| DESIGN | `solution-architect` | `solution-architect-reviewer` | `docs/decisions-tactical/adr-*.md`, `contracts-*.md` |
 | DISTILL | `acceptance-designer` | `acceptance-designer-reviewer` | `.skraft/sdlc/distill/*.feature`, `impl-plan-*.md` |
 | DELIVER | `software-engineer` | `software-engineer-reviewer` | Committed code + passing tests |
 

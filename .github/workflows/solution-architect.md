@@ -120,9 +120,9 @@ Dispatch is allowed only after the Persistence Contract succeeds.
 
 The DESIGN phase commits every story-triggered ADR first with `Status: Proposed`. The `Proposed → Accepted | Rejected` transition is owned by a human. In this workflow (agentic pipeline), the channel is the originating GitHub issue:
 
-1. **After** the Persistence Contract succeeds and **before** dispatching the reviewer, list every newly written ADR in `.skraft/sdlc/design/` whose `Status:` line reads `Proposed`.
+1. **After** the Persistence Contract succeeds and **before** dispatching the reviewer, list every newly written ADR in `docs/decisions-tactical/` whose `Status:` line reads `Proposed`.
 2. If at least one Proposed ADR exists, post **one** comment (via `add-comment`, target = issue #${{ github.event.inputs.issue_number }}) summarising them. The comment MUST contain, for each Proposed ADR:
-   - The ADR file path (e.g. `.skraft/sdlc/design/adr-003-event-sourcing.md`)
+   - The ADR file path (e.g. `docs/decisions-tactical/adr-003-event-sourcing.md`)
    - A one-line summary of the Decision
    - A request: "Reply with `/adr-accept adr-003` or `/adr-reject adr-003 <rationale>` to ratify."
 3. The comment ends with: "`solution-architect-reviewer` will run on the current revisions; ratification commits (status flips) will land in a follow-up workflow."

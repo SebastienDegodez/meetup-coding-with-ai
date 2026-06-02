@@ -15,7 +15,7 @@ metadata:
     - architecture-review-criteria
   inputs:
     required:
-      - .skraft/sdlc/design/adr-*.md
+      - docs/decisions-tactical/adr-*.md
       - .skraft/sdlc/design/diagrams-{story}.md
       - .skraft/sdlc/design/contracts-{story}.md
       - .skraft/sdlc/design/consistency-matrix-{story}.md
@@ -51,7 +51,7 @@ Load before starting:
 ### Phase 1: RECEIVE
 
 Load all DESIGN artefacts:
-1. Load all `adr-*.md` files from `.skraft/sdlc/design/`
+1. Load all `adr-*.md` files from `docs/decisions-tactical/`
 2. Load all `diagrams-{story}.md` files
 3. Load all `contracts-{story}.md` files
 4. Load all `consistency-matrix-{story}.md` files
@@ -95,7 +95,7 @@ Evaluate gates:
 
 **How to check G1:** Two-pass procedure. **Pass A (diagrams):** for each aggregate, bounded context, pattern (CQRS, Event Sourcing, Saga) visible in diagrams — confirm an ADR exists that justifies its inclusion. **Pass B (source tree):** run the Phase 7.0 grep signatures over the source tree — `ICommandBus|IQueryBus|CommandBus|QueryBus` (CQRS+Bus), `IEventStore|EventStream|Apply\(.*Event` (Event Sourcing), `Saga|ProcessManager|ICorrelatedBy` (Saga). For every hit, confirm an ADR exists that justifies the pattern's adoption. A pattern present in code but absent from ADRs is a G1 BLOCKER (architecture-by-accident).
 
-**How to check G14:** Two-pass procedure. **Pass A (filename):** `ls .skraft/sdlc/design/adr-*.md` — any filename ending in `-rejected.md` is an immediate BLOCKER (the rejection IS the artefact). **Pass B (Decision section):** read each ADR's Decision section. If it starts with `We will not`, `We reject`, or `We avoid`, run the Phase 7.0 grep for the rejected pattern over the source tree. If the grep returns zero hits, the ADR documents a non-decision (refusing something that isn't there) — BLOCKER. If the grep returns hits, the negative-phrased Decision is justified (documenting an active rejection of a pattern actually present in code) — pass.
+**How to check G14:** Two-pass procedure. **Pass A (filename):** `ls docs/decisions-tactical/adr-*.md` — any filename ending in `-rejected.md` is an immediate BLOCKER (the rejection IS the artefact). **Pass B (Decision section):** read each ADR's Decision section. If it starts with `We will not`, `We reject`, or `We avoid`, run the Phase 7.0 grep for the rejected pattern over the source tree. If the grep returns zero hits, the ADR documents a non-decision (refusing something that isn't there) — BLOCKER. If the grep returns hits, the negative-phrased Decision is justified (documenting an active rejection of a pattern actually present in code) — pass.
 
 **How to check G2:** Cross-read all ADRs. Look for conflicting decisions on the same concept (same name, incompatible classification). For any `Superseded by` line, confirm the named successor ADR exists and carries the reciprocal `Supersedes:` line.
 
