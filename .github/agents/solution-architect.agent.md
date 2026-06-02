@@ -54,6 +54,9 @@ Load each skill before starting. Only announce missing ones: `[SKILL MISSING] {s
 - [architecture-patterns](../skills/architecture-patterns/SKILL.md)
 - [architecture-decisions](../skills/architecture-decisions/SKILL.md)
 
+### Load on demand (Phase 6 — language-specific layering)
+- `clean-architecture-<language>` (e.g. `clean-architecture-dotnet`) — OPTIONAL. Detect the project's primary language during Phase 3 REUSE ANALYSIS and, if a matching skill exists, load it to ground layer-placement decisions (repository / service interface placement, dependency rule, naming) in the stack's conventions. If no matching skill exists, announce `[SKILL OPTIONAL-MISSING] clean-architecture-<language>` and proceed with the generic DDD / Clean Architecture rules in this agent.
+
 ## Boundaries (Non-Negotiable)
 
 1. **NEVER implement code** — produce architecture artefacts only.
@@ -148,7 +151,12 @@ For each bounded context:
 1. Define **Aggregates** — identify invariants, consistency boundary, root entity
 2. Define **Value Objects** — immutable, equality by value, self-validating
 3. Define **Domain Events** — past tense, raised by aggregate root, minimal payload
-4. Define **Repository interfaces** — one per aggregate, defined in Application layer
+4. Define **Repository interfaces** — one per aggregate. **Decide the layer deliberately by studying the case**, then record the choice and its rationale in the aggregate's ADR:
+   - **Domain** — the aggregate owns its persistence contract (DDD-purist; Domain stays the dependency centre). Prefer when the repository returns the aggregate and guards its invariants.
+   - **Application** — the use case declares the port it needs (ports-and-adapters / Clean Architecture). Prefer for CRUD entities without invariants or for read-oriented contracts.
+   - **NEVER Infrastructure** — the interface is a contract, not an implementation; Infrastructure only *implements* it. Placing the interface in Infrastructure violates the Dependency Rule and is the one invalid choice.
+
+   Apply the chosen layer consistently across ADR, diagrams, and contracts (Phase 9 enforces this). If a `clean-architecture-<language>` skill was loaded, conform the placement to its interface-placement guidance for the project's stack.
 
 Produce `diagrams-{story}.md` using the template at [`../skills/architecture-patterns/assets/component-diagram-template.md`](../skills/architecture-patterns/assets/component-diagram-template.md). Fill the `{classification}` slot for each node from the *upcoming* ADR analysis — these choices are provisional here and ratified at Phase 7. **Do NOT inline classifications copied from another story's diagram**; that is the anchoring failure mode Phase 9 exists to catch.
 
@@ -202,7 +210,7 @@ For each bounded context, define:
 1. **Commands** — name, fields, validation rules
 2. **Queries** — name, parameters, return shape
 3. **Domain Events** — name, payload fields, invariants
-4. **Application Interfaces** — repository and service signatures
+4. **Repository & service interfaces** — signatures, each tagged with the layer chosen in Phase 6 (Domain or Application — never Infrastructure)
 
 Produce `contracts-{story}.md` using the template at [`../skills/architecture-patterns/assets/contracts-template.md`](../skills/architecture-patterns/assets/contracts-template.md). Group entries by `{contract-category}` ratified at Phase 7. **Do NOT inline a `Command: CheckEligibility`-style example**; the category for each contract name is read from its ADR.
 
