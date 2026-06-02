@@ -165,11 +165,13 @@ Aggregate all findings from the three lenses.
 | Condition | Verdict |
 |---|---|
 | Any blocker file with `status: awaiting_human` (G13) | `rejected` — escalation pending, human must answer |
-| ≥1 BLOCKER finding | `rejected` |
+| ≥1 BLOCKER finding | `changes_requested` |
 | ≥1 HIGH finding, 0 BLOCKER | `changes_requested` |
 | MEDIUM findings only | `changes_requested` |
 | LOW findings only | `approved` with notes |
 | Zero findings | `approved` |
+
+`rejected` is reserved for the G13 human-escalation gate (a blocker file `awaiting_human`). A BLOCKER finding is mechanically correctable by the solution-architect: it returns `changes_requested` so the orchestrator re-dispatches with the findings attached (auto-retry, escalating to a human only after 3 failed attempts).
 
 **Dissent rule:** If 2 lenses pass and 1 fails — this is a partial failure. State explicitly: "Lenses {A} and {B} pass. Lens {C} fails on gate {Gn}." Never silently absorb a lens failure into an overall pass.
 

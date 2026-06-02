@@ -66,10 +66,12 @@ Apply the severity matrix:
 
 | Condition | Status |
 |-----------|--------|
-| ≥1 `blocker` in any lens | `rejected` |
+| ≥1 `blocker` in any lens | `changes_requested` |
 | ≥1 `high`, 0 `blocker` | `changes_requested` |
 | `medium` only, across all lenses | `changes_requested` |
 | `low` only or all pass | `approved` |
+
+A `blocker` finding is mechanically correctable by the software-engineer: it returns `changes_requested` so the orchestrator re-dispatches with the findings attached (auto-retry, escalating to a human only after 3 failed attempts).
 
 **Dissent Rule:** If 3 lenses say `pass` and 1 says `fail`:
 1. Examine the failing lens's findings explicitly.

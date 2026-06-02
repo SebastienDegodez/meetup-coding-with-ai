@@ -101,10 +101,12 @@ Apply the severity matrix (from `acceptance-review-criteria` skill):
 
 | Condition | Verdict |
 |---|---|
-| ≥1 BLOCKER in any lens | `rejected` |
+| ≥1 BLOCKER in any lens | `changes_requested` |
 | ≥1 HIGH, 0 BLOCKER | `changes_requested` |
 | MEDIUM only across all lenses | `changes_requested` |
 | LOW only or all pass | `approved` |
+
+A BLOCKER finding is mechanically correctable by the acceptance-designer: it returns `changes_requested` so the orchestrator re-dispatches with the findings attached (auto-retry, escalating to a human only after 3 failed attempts).
 
 **Dissent Rule:** If 3 lenses pass and 1 fails — explain explicitly why the minority finding is overridden OR upheld. Never silently override. Document in `dissent`.
 
