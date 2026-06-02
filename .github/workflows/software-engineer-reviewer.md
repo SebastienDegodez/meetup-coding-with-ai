@@ -49,6 +49,8 @@ checkout:
 network:
   allowed:
     - defaults
+    - "api.nuget.org"
+    - "dc.services.visualstudio.com"
 
 imports:
   - .github/agents/software-engineer-reviewer.agent.md

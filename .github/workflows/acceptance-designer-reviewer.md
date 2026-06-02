@@ -43,6 +43,8 @@ checkout:
 network:
   allowed:
     - defaults
+    - "api.nuget.org"
+    - "dc.services.visualstudio.com"
 
 imports:
   - .github/agents/acceptance-designer-reviewer.agent.md

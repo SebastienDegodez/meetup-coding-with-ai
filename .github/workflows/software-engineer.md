@@ -49,6 +49,8 @@ network:
     - python
     - dotnet
     - java
+    - "api.nuget.org"
+    - "dc.services.visualstudio.com"
 
 checkout:
   ref: ${{ github.event.inputs.working_branch }}
