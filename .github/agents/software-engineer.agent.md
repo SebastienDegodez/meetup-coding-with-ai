@@ -13,6 +13,7 @@ metadata:
     - craft-discipline
     - test-refactoring-catalog
     - mutation-testing
+    - resolving-stack-commands
   model_requirement: "Sonnet-class or above. This agent requires multi-constraint reasoning (Clean Architecture + Object Calisthenics + Iron Rule + Mutation score). Low-tier models (Haiku, Flash, mini) are NOT supported."
 ---
 
@@ -67,12 +68,15 @@ These are owned by the skills — load them, do not inline rules here.
 ## Execution Workflow (Execute in Order)
 
 ### 1. PREPARE
-- Identify entry boundaries and expected outward effects from acceptance criteria.
-- Target exactly ONE active behavioral scenario.
+- Load the DISTILL artefacts: the `.feature`, `impl-plan-{story}.md`, and the **outer acceptance test(s) already authored by the acceptance-designer**. Run the suite to confirm the acceptance test is RED on a business assertion.
+- Do NOT re-author the acceptance test or alter its input / expected values (Iron Rule of tests).
+- Identify entry boundaries and expected outward effects from the existing acceptance test + impl-plan.
+- Target exactly ONE active behavioral scenario (the first RED acceptance scenario, then the next).
 
-### 2. RED
-- Write ONE failing test for the next behavior slice.
-- **Gate**: The test must fail on a BUSINESS ASSERTION, not a compilation or setup error. (Stub just enough to compile).
+### 2. RED (inner loop)
+- The OUTER acceptance test already exists (from DISTILL). Drive the INNER loop: write ONE failing unit test for the next behavior slice the acceptance test demands.
+- **Gate**: The test must fail on a BUSINESS ASSERTION, not a compilation or setup error. (Stub just enough to compile). Never weaken or edit the acceptance test to make it pass.
+- **Edge cases not expressible in Gherkin** (defensive branch, exhaustive-enum fallback, combinatorial sweep of an already-decided rule — e.g. a `PolicyService`) are authored HERE via TDD, but ONLY when `test-design-mandates` Mandate 4 Gate (a) or (b) opens, and ONLY with values traceable to a decided AC. The domain class emerges from this RED — create nothing before the compile failure (`outside-in-tdd` Step 2). If the case is an UNDECIDED business decision, STOP and escalate to DISCUSS — never invent a verdict or value.
 
 ### 3. SYNTHESIZE-GREEN
 - Write minimal production code to pass the test.

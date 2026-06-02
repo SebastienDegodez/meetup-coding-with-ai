@@ -18,6 +18,7 @@ metadata:
       - .skraft/sdlc/distill/{feature}.feature
       - .skraft/sdlc/distill/test-plan-{story}.md
       - .skraft/sdlc/distill/impl-plan-{story}.md
+      - tests/**/{Feature}AcceptanceTests.cs
     context:
       - .skraft/sdlc/discuss/ac-draft-{story}.md
       - .skraft/sdlc/design/contracts-{story}.md
@@ -40,6 +41,7 @@ Collect artefacts:
 - **Feature files** — `.skraft/sdlc/distill/*.feature`
 - **Test plan** — `.skraft/sdlc/distill/test-plan-{story}.md`
 - **Implementation plan** — `.skraft/sdlc/distill/impl-plan-{story}.md`
+- **Outer acceptance test** — `tests/**/{Feature}AcceptanceTests.cs` (RED outer-loop test authored in DISTILL)
 - **AC source** — `.skraft/sdlc/discuss/ac-draft-{story}.md` (bijection reference)
 - **Contracts** — `.skraft/sdlc/design/contracts-{story}.md` (boundary reference)
 
@@ -74,13 +76,15 @@ Evaluate 4 lenses independently. Each lens sees only its designated inputs — f
 ---
 
 #### Lens 3: testability-lens
-**Inputs:** Feature files + test plan + implementation plan
-**Question:** Are scenarios implementable as-is? Is the outside-in sequencing correct?
+**Inputs:** Feature files + test plan + implementation plan + outer acceptance test
+**Question:** Are scenarios implementable as-is? Is the outside-in sequencing correct? Is the outer acceptance test a faithful, RED encoding of the AC?
 
 | Gate | Definition | Severity if violated |
 |---|---|---|
 | G5 | Every step is unambiguous and independently implementable. | HIGH |
 | G6 | Every scenario in the feature files has a corresponding entry in the implementation plan. | HIGH |
+| G9 | Every input/expected value in the outer acceptance test matches the `.feature` verbatim — no invented or altered values. | BLOCKER |
+| G10 | The outer acceptance test exists and its first scenario fails on a business assertion (RED), not a compile/setup error. | BLOCKER |
 
 ---
 
