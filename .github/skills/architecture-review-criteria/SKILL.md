@@ -38,7 +38,7 @@ Evaluates: diagrams + contracts + event models
 | G3 | Dependency rule: Domain and Application layers have no dependencies on Infrastructure or API layers. | Zero imports of Infrastructure or API types in Domain or Application contracts. | BLOCKER |
 | G4 | All application interfaces (repositories, gateways, event publishers) are defined in the Application layer contracts. None are defined in Infrastructure. | Zero infrastructure-defined interfaces in contracts. All I* interfaces listed under Application layer. | BLOCKER |
 | G5 | Each aggregate enforces its own invariants. No aggregate enforces invariants that belong to another aggregate. | Zero cross-aggregate invariant references in contracts or diagrams. | HIGH |
-| G6 | Context map declares every inter-context relationship with an explicit pattern (ACL, Conformist, Shared Kernel, Partnership, Open Host Service, Published Language). | Zero unlabelled arrows between bounded contexts in context-map.md. | HIGH |
+| G6 | Context map declares every inter-context relationship with an explicit pattern (ACL, Conformist, Shared Kernel, Partnership, Open Host Service, Published Language) AND every label is admissible: (a) no relationship labelled `Conformist` has a **Core** subdomain as its downstream; (b) no relationship labelled `Conformist` is in fact a published contract consumed with a local copy or translation (that is OHS/PL upstream + ACL downstream, see V-DDD-09 / V-DDD-10). | Zero unlabelled arrows between bounded contexts in context-map.md AND zero inadmissible labels. | HIGH |
 
 ### Lens 3 — fitness-lens
 
@@ -93,6 +93,7 @@ Evaluates: diagrams + contracts + stories + ADRs
 5. Bounded context boundaries map to language boundaries — if the same word means different things, there is a boundary
 6. Context map relationships are explicit and labelled — implicit dependencies are forbidden
 7. Subdomains are classified (Core/Supporting/Generic) and the investment level is justified
+8. A Core subdomain is never the downstream of a `Conformist` relationship — it protects its Ubiquitous Language via an ACL. Consuming a published contract (ViewModel/event/DTO) with a local copy or translation is OHS/PL + ACL, never Conformist, regardless of how trivial the translation is
 
 ---
 
@@ -106,7 +107,7 @@ Apply during G9 evaluation:
 | New aggregate | Which invariant does this aggregate enforce? Which story produces that invariant? |
 | Event Sourcing | Which story requires audit trail or temporal queries? |
 | Saga | Which cross-aggregate workflow spans multiple stories? |
-| ACL | Which conflicting model in the upstream context makes translation necessary? |
+| ACL | Which conflicting model in the upstream context makes translation necessary, OR is the downstream a Core subdomain protecting its Ubiquitous Language? |
 
 If the answer is "none" or "future needs" — flag as G9 MEDIUM violation.
 
@@ -115,6 +116,6 @@ If the answer is "none" or "future needs" — flag as G9 MEDIUM violation.
 ## References
 
 - [gate-definitions.md](references/gate-definitions.md) — Detailed checklist per gate (G1–G9) with step-by-step checks
-- [ddd-violations.md](references/ddd-violations.md) — 8 DDD violation patterns detectable in artefacts
+- [ddd-violations.md](references/ddd-violations.md) — 10 DDD violation patterns detectable in artefacts
 - [clean-arch-violations.md](references/clean-arch-violations.md) — 8 Clean Architecture violations detectable in contracts and diagrams
 - [verdict-rubric.md](references/verdict-rubric.md) — Verdict derivation, confidence levels, and 3 example review verdicts
