@@ -11,15 +11,18 @@ public class EligibilityPolicyTests
     // ── Age boundaries ──────────────────────────────────────────────────────
 
     [Fact]
-    public void Evaluate_WhenDriverTurns18ExactlyToday_ReturnsAccepted()
+    public void Evaluate_WhenDriverTurns18ExactlyToday_ReturnsRefused()
     {
         var driver = new Driver(Today.AddYears(-18), licenseYears: 2);
         var vehicle = new Vehicle(VehicleType.Car, power: null);
 
         var result = _policy.Evaluate(driver, vehicle, Today);
 
-        var wasAccepted = result.Match(onAccepted: () => true, onRefused: _ => false);
-        Assert.True(wasAccepted);
+        var (wasAccepted, capturedReason) = result.Match(
+            onAccepted: () => (true, (string?)null),
+            onRefused: r => (false, (string?)r));
+        Assert.False(wasAccepted);
+        Assert.Equal("Conducteur trop jeune pour ce véhicule", capturedReason);
     }
 
     [Fact]
