@@ -111,10 +111,10 @@ source: SebastienDegodez/agentic-project-demo/catalog/skraft-pipeline/software-e
 
 This workflow guarantees persistence before reviewer dispatch:
 
-1. **Before writing code**, call the GitHub API to check if a PR already exists for `working_branch`:
-   - `GET /repos/{owner}/{repo}/pulls?head={owner}:{working_branch}&state=open`
-   - If a PR exists → use **only** `push-to-pull-request-branch` (never `create-pull-request`).
-   - If no PR exists → use `create-pull-request` to open the PR, then `push-to-pull-request-branch` for any subsequent iteration.
+1. **Before writing code**, resolve the open PR for `working_branch`:
+   - `PR_NUMBER=$(gh pr list --head "${working_branch}" --state open --json number --jq '.[0].number')`
+   - If `PR_NUMBER` is non-empty → use **only** `push-to-pull-request-branch` with `pull_request_number: ${PR_NUMBER}` in the JSON payload (REQUIRED because `target: "*"` does not auto-resolve the PR); never use `create-pull-request`.
+   - If `PR_NUMBER` is empty → use `create-pull-request` to open the PR, then `push-to-pull-request-branch` with the resulting `pull_request_number` for any subsequent iteration.
 2. Apply implementation changes and update the PR branch.
 3. Confirm changes are persisted remotely (not local-only).
 4. Treat any push/auth/write failure as BLOCKED:

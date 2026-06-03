@@ -106,9 +106,16 @@ source: SebastienDegodez/agentic-project-demo/catalog/skraft-pipeline/acceptance
 
 This workflow guarantees persistence before reviewer dispatch:
 
-1. Generate DISTILL artefacts in `.skraft/sdlc/distill/`.
-2. Persist artefacts remotely by updating an existing PR branch via `push-to-pull-request-branch`; if no PR exists yet for `working_branch`, fallback to `create-pull-request`.
-3. Treat any remote persistence failure (PR create/update/auth/write) as BLOCKED:
+1. **Checkout the PR branch first** so the bundle's prerequisite commits are present in the local repo:
+   - `git fetch origin "${working_branch}":"${working_branch}"`
+   - `git checkout "${working_branch}"`
+   - Without this step, the safe-outputs processor will fail with `Repository lacks these prerequisite commits` because the runner is checked out on the workflow `--ref`, not on `working_branch`.
+2. Generate DISTILL artefacts in `.skraft/sdlc/distill/` and commit them on `working_branch`.
+3. Look up the open pull request whose head branch equals `working_branch`:
+   - `PR_NUMBER=$(gh pr list --head "${working_branch}" --state open --json number --jq '.[0].number')`
+   - If `PR_NUMBER` is non-empty, persist artefacts **exclusively** via `push-to-pull-request-branch` with `pull_request_number: ${PR_NUMBER}` in the JSON payload (REQUIRED because `target: "*"` does not auto-resolve the PR).
+   - If `PR_NUMBER` is empty (no PR exists yet for `working_branch`), fallback to `create-pull-request`.
+4. Treat any remote persistence failure (PR create/update/auth/write/missing `pull_request_number`) as BLOCKED:
   - add label `state:blocked`
   - post one concise blocker comment
   - do **not** dispatch `acceptance-designer-reviewer`

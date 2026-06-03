@@ -97,9 +97,12 @@ source: SebastienDegodez/agentic-project-demo/catalog/skraft-pipeline/backlog-pl
 
 This workflow guarantees persistence before reviewer dispatch:
 
-1. Generate DISCUSS artefacts (`.skraft/sdlc/discuss/stories-{milestone}.md` and `ac-draft-{story}.md`).
-2. Persist artefacts remotely by updating an existing PR branch via `push-to-pull-request-branch`; if no PR exists yet for `working_branch`, fallback to `create-pull-request`.
-3. Treat any remote persistence failure (PR create/update/auth/write) as BLOCKED:
+1. Generate DISCUSS artefacts (`.skraft/sdlc/discuss/stories-{milestone}.md` and `ac-draft-{story}.md`) and commit them on `working_branch`.
+2. Look up the open pull request whose head branch equals `working_branch`:
+   - `PR_NUMBER=$(gh pr list --head "${working_branch}" --state open --json number --jq '.[0].number')`
+   - If `PR_NUMBER` is non-empty, persist artefacts **exclusively** via `push-to-pull-request-branch` with `pull_request_number: ${PR_NUMBER}` in the JSON payload (REQUIRED because `target: "*"` does not auto-resolve the PR).
+   - If `PR_NUMBER` is empty (no PR exists yet for `working_branch`), fallback to `create-pull-request`.
+3. Treat any remote persistence failure (PR create/update/auth/write/missing `pull_request_number`) as BLOCKED:
   - add label `state:blocked`
   - post one concise blocker comment
   - do **not** dispatch `backlog-planner-reviewer`
