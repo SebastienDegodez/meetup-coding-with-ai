@@ -44,8 +44,7 @@ checkout:
 network:
   allowed:
     - defaults
-    - "api.nuget.org"
-    - "dc.services.visualstudio.com"
+    - dotnet
 
 imports:
   - .github/agents/acceptance-designer.agent.md
