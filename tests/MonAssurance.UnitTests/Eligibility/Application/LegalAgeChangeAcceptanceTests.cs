@@ -83,4 +83,20 @@ public class LegalAgeChangeAcceptanceTests
         Assert.False(result.IsEligible);
         Assert.Equal("Conducteur trop jeune pour ce véhicule", result.RejectionReason);
     }
+
+    // AC-02 boundary — Conducteur de 21 ans exactement aujourd'hui avec voiture est éligible (borne inférieure de la nouvelle loi)
+    [Fact]
+    public void Handle_WhenDriverIs21ExactlyTodayAndHasCar_ReturnsEligible()
+    {
+        var query = new CheckEligibilityQuery(
+            DateOfBirth: Today.AddYears(-21),
+            VehicleType: VehicleType.Car,
+            Power: null,
+            LicenseYears: 2);
+
+        var result = _handler.Handle(query);
+
+        Assert.True(result.IsEligible);
+        Assert.Null(result.RejectionReason);
+    }
 }
