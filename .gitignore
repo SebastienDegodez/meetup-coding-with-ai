@@ -425,3 +425,6 @@ apm_modules/
 
 # Design exploration / previews
 .ecc-design/
+
+# Stryker.NET mutation testing output
+StrykerOutput/

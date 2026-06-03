@@ -34,7 +34,12 @@ Run mutation testing **after the relevant test baseline is green**:
 
 ### Primary: Stryker.NET (Recommended)
 
-For .NET projects, [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) is the established mutation framework with excellent C# support. **No config file needed** — all options are passed via CLI.
+For .NET projects, [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) is the established mutation framework with excellent C# support.
+
+> **No `stryker-config.json` — by design.** This project does NOT use a Stryker
+> config file. Never create one, and never run bare `dotnet stryker` (it relies
+> on a config or mutates everything). Always pass `--project`, `-tp`, and
+> `--since` explicitly so the run is reproducible and scoped to the diff.
 
 **Install (only if not already available):**
 ```bash
@@ -45,46 +50,55 @@ dotnet stryker --version
 dotnet tool install -g dotnet-stryker
 ```
 
-**Run on changed code only (default workflow — use after every story):**
+**Primary command — diff vs the destination branch, no config file:**
 ```bash
-# Mutate only files changed since main — fast, targeted
+# Mutate the Domain project, run its UnitTests, scope to the PR diff.
+# Replace <target-branch> with the branch you will merge INTO (the PR base).
 dotnet stryker \
-  --project src/YourProject.Domain/YourProject.Domain.csproj \
+  --project YourProject.Domain.csproj \
   -tp tests/YourProject.UnitTests/YourProject.UnitTests.csproj \
-  --mutate "**/*.cs" --mutate "!**/*Marker.cs" --mutate "!**/DependencyInjection.cs" \
-  --since:main \
-  --break-at 100 \
-  -r json
+  --since:<target-branch> \
+  -r markdown -r json -r cleartext
 ```
 
-> `--since:main` — only mutants within git-diff vs `main` are tested. Unchanged code produces no result. Fast.
+> **Why `--since`:** it mutates only the code changed between the current branch
+> and `<target-branch>` (the PR base) — fast, focused on what the PR actually
+> touches. In CI, resolve the base from the PR event and prefix with the remote
+> if needed (e.g. `--since:origin/main`). If the diff touches no Domain code,
+> Stryker reports zero mutants — that is a valid PASS, not a failure.
 
-**Run full business logic (use before merge):**
+> **`--project` takes the .csproj FILE NAME, not a path** — Stryker locates it
+> inside the solution. The no-config form is `--project` + `-tp` + `--since`,
+> with NO `--mutate` path globs.
+
+> ⚠️ **Footgun — project-relative `--mutate`:** `--mutate` globs are resolved
+> RELATIVE TO THE MUTATED PROJECT directory, not the solution root. A pattern
+> like `--mutate "src/YourProject.Domain/**/*.cs"` matches NOTHING from inside
+> the Domain project, so every mutant is silently "Removed by mutate filter"
+> and Stryker reports *"unable to calculate a mutation score"*. To exclude
+> files, use suffix-only EXCLUDE patterns (`--mutate "!**/*Marker.cs"`); never
+> prefix an include glob with a solution-relative path.
+
+**Exclude non-logic files (combine with `--since`, suffix-only patterns are safe):**
 ```bash
 dotnet stryker \
-  --project src/YourProject.Core/YourProject.Core.csproj \
+  --project YourProject.Domain.csproj \
   -tp tests/YourProject.UnitTests/YourProject.UnitTests.csproj \
-  --mutate "src/YourProject.Core/**/*.cs" \
-  --mutate "src/YourProject.Application/**/*.cs" \
+  --since:<target-branch> \
   --mutate "!**/*Marker.cs" --mutate "!**/DependencyInjection.cs" \
-  --break-at 100 \
-  --threshold-high 90 --threshold-low 80 \
-  -r json -r cleartext
+  -r markdown -r json -r cleartext
 ```
 
-**Cumulative baseline — full picture after incremental runs:**
+**Cumulative baseline — full picture across PRs:**
 ```bash
-# --with-baseline combines --since with a persistent baseline report
-# Use this in CI to keep a full history while only re-testing changed code
+# --with-baseline = --since + a persistent baseline report. Keeps a full score
+# history in CI while only re-testing code changed vs the target branch.
 dotnet stryker \
-  --project src/YourProject.Core/YourProject.Core.csproj \
+  --project YourProject.Domain.csproj \
   -tp tests/YourProject.UnitTests/YourProject.UnitTests.csproj \
-  --with-baseline:main \
-  --break-at 100 \
-  -r json
+  --with-baseline:<target-branch> \
+  -r markdown -r json
 ```
-
-> `--with-baseline` = `--since` + saves/loads a baseline report. Gives a complete score even when only changed files were re-tested.
 
 ### Alternative: Custom Mutation Tool (For Specific Needs)
 
@@ -148,27 +162,17 @@ Before running mutation testing, confirm:
 
 ### Step 3: Run Mutations
 
-**During development (fast, on changed code only):**
+**Scope to the PR diff (default — no config file, compare vs the target branch):**
 ```bash
 dotnet stryker \
-  --project src/YourProject.Core/YourProject.Core.csproj \
+  --project YourProject.Domain.csproj \
   -tp tests/YourProject.UnitTests/YourProject.UnitTests.csproj \
-  --since:main \
-  --break-at 100 \
-  -r json
+  --since:<target-branch> \
+  -r markdown -r json -r cleartext
 ```
 
-**Before merge (full business logic scope):**
-```bash
-dotnet stryker \
-  --project src/YourProject.Core/YourProject.Core.csproj \
-  -tp tests/YourProject.UnitTests/YourProject.UnitTests.csproj \
-  --mutate "src/YourProject.Core/**/*.cs" \
-  --mutate "src/YourProject.Application/**/*.cs" \
-  --mutate "!**/*Marker.cs" --mutate "!**/DependencyInjection.cs" \
-  --break-at 100 \
-  -r json -r cleartext
-```
+> `<target-branch>` is the PR base (the branch you merge INTO). In CI, resolve it
+> from the PR event and prefix with the remote if needed (`--since:origin/main`).
 
 **Metrics:**
 - Total mutants generated
@@ -176,9 +180,9 @@ dotnet stryker \
 - Mutants survived (test gap ✗)
 - Mutation score: (killed / total) × 100
 
-> **`--since` note:** unchanged files produce no result — this is expected. Survivors and kills only apply to the diff scope.
+> **`--since` note:** unchanged files produce no result — this is expected. Survivors and kills only apply to the diff scope. A PR with no Domain changes yields zero mutants (valid PASS).
 
-**Expected duration:** `--since` run: ~1-3 min. Full run: ~5-15 min (depends on test suite speed).
+**Expected duration:** `--since` run: ~1-3 min on the changed scope.
 
 ### Step 4: Analyze Survivors
 
@@ -205,11 +209,10 @@ For each surviving mutant:
 
 ```bash
 dotnet stryker \
-  --project <YourProject.Domain.csproj> \
-  -tp <path/to/YourProject.UnitTests/YourProject.UnitTests.csproj> \
+  --project YourProject.Domain.csproj \
+  -tp tests/YourProject.UnitTests/YourProject.UnitTests.csproj \
   --mutate "**/<FileWithRealGap>.cs" \
   --mutate "!**/*Marker.cs" --mutate "!**/DependencyInjection.cs" \
-  --break-at 100 \
   -r cleartext
 ```
 
@@ -291,8 +294,13 @@ Equivalent mutants are the only legitimate exception — document them explicitl
 
 **CI/CD integration:**
 ```bash
-# In CI pipeline - fail build if below 100%
-dotnet stryker --break-at [team-threshold]
+# In CI - scope to the PR diff vs the base branch, fail if survivors remain.
+dotnet stryker \
+  --project YourProject.Domain.csproj \
+  -tp tests/YourProject.UnitTests/YourProject.UnitTests.csproj \
+  --since:origin/<target-branch> \
+  --break-at [team-threshold] \
+  -r markdown -r json
 ```
 
 > When the CI gate fails, it means survivors remain. **Do not raise the threshold to pass — investigate each survivor first.** Classify them as real gap (write a test) or equivalent mutant (document). Only equivalent mutants are an acceptable reason to adjust the threshold.
@@ -327,6 +335,18 @@ Never mutate repositories, adapters, and pure plumbing. Focus on business logic 
 ### "Run mutations on every commit"
 Too slow. Run on feature completion or weekly. CI runs only on PR.
 
+### "Scope with --mutate \"src/Project/**/*.cs\""
+Footgun. `--mutate` globs are resolved relative to the MUTATED PROJECT, not the
+solution root. A solution-relative path glob matches zero files, every mutant is
+"Removed by mutate filter", and Stryker reports "unable to calculate a mutation
+score". Mutate the whole project (`--project` + `-tp`, no include glob) and use
+suffix-only EXCLUDE patterns (`--mutate "!**/*Marker.cs"`).
+
+### "Generate the HTML report in CI"
+The interactive HTML report is heavy and unread by reviewers. Use the lighter
+`markdown` + `json` reporters (`-r markdown -r json`): markdown is a compact
+human summary for the PR comment, json is machine-readable for survivor queries.
+
 ### "Ignore all survivors as equivalent"
 Rationalization. Most survivors are real gaps. Investigate each one.
 
@@ -339,6 +359,8 @@ Mutation score is a signal, not the goal. Focus on killing mutants that represen
 |---------|-----|
 | Running mutation on failing tests | Green baseline required — fix tests first |
 | Mutating test files | Configure Stryker to mutate source only |
+| Solution-relative `--mutate` path glob | Mutate whole project (no include glob); exclude with suffix-only `!**/*Marker.cs` |
+| Generating the heavy HTML report in CI | Use lighter `-r markdown -r json` reporters |
 | Treating all survivors as equivalent | Only equivalent mutants are exempt — document them, kill the rest |
 | Mutation testing without fast tests | Optimize test speed — slow tests = slow mutations |
 | Not scoping mutations progressively | Start small (one policy), expand gradually |
@@ -352,47 +374,31 @@ dotnet tool install -g dotnet-stryker
 dotnet tool update -g dotnet-stryker
 ```
 
-**On changed code only (fast — during development):**
+**Scope to the PR diff (default — compare vs the target branch, no config):**
 ```bash
 dotnet stryker \
-  --project <YourProject.Domain.csproj> \
-  -tp <path/to/YourProject.UnitTests/YourProject.UnitTests.csproj> \
-  --since:main \
-  --break-at 100 \
-  -r json
-```
-
-**Full business logic scope (before merge):**
-```bash
-dotnet stryker \
-  --project <YourProject.Domain.csproj> \
-  -tp <path/to/YourProject.UnitTests/YourProject.UnitTests.csproj> \
-  --mutate "src/<YourProject>.Domain/**/*.cs" \
-  --mutate "src/<YourProject>.Application/**/*.cs" \
-  --mutate "!**/*Marker.cs" --mutate "!**/DependencyInjection.cs" \
-  --break-at 100 \
-  --threshold-high 100 --threshold-low 100 \
-  -r json -r cleartext
+  --project YourProject.Domain.csproj \
+  -tp tests/YourProject.UnitTests/YourProject.UnitTests.csproj \
+  --since:<target-branch> \
+  -r markdown -r json -r cleartext
 ```
 
 **Cumulative baseline in CI (full picture + incremental speed):**
 ```bash
 dotnet stryker \
-  --project <YourProject.Domain.csproj> \
-  -tp <path/to/YourProject.UnitTests/YourProject.UnitTests.csproj> \
-  --with-baseline:main \
-  --break-at 100 \
-  -r json
+  --project YourProject.Domain.csproj \
+  -tp tests/YourProject.UnitTests/YourProject.UnitTests.csproj \
+  --with-baseline:<target-branch> \
+  -r markdown -r json
 ```
 
 **Scope to a specific file or feature (debug a survivor):**
 ```bash
 dotnet stryker \
-  --project <YourProject.Domain.csproj> \
-  -tp <path/to/YourProject.UnitTests/YourProject.UnitTests.csproj> \
+  --project YourProject.Domain.csproj \
+  -tp tests/YourProject.UnitTests/YourProject.UnitTests.csproj \
   --mutate "**/<TargetFile>.cs" \
   --mutate "!**/*Marker.cs" --mutate "!**/DependencyInjection.cs" \
-  --break-at 100 \
   -r cleartext
 ```
 
