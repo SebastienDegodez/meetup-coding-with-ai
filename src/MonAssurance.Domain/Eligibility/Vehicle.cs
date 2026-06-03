@@ -21,5 +21,5 @@ public sealed class Vehicle
     public int MinimumAge() => _type == VehicleType.ElectricScooter ? MinimumElectricScooterAge : MinimumDrivingAge;
 
     // Convention: null power treated as ≤ 100 hp — no experience rule triggered.
-    public bool IsHighPowerMotorcycle() => _type == VehicleType.Motorcycle && _power > HighPowerThresholdHp;
+    public bool IsHighPowerMotorcycle() => _type == VehicleType.Motorcycle && _power.GetValueOrDefault(0) > HighPowerThresholdHp;
 }

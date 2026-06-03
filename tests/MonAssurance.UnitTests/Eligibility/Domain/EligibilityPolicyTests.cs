@@ -53,6 +53,21 @@ public class EligibilityPolicyTests
     }
 
     [Fact]
+    public void Evaluate_WhenElectricScooterDriverIs15_ReturnsRefused()
+    {
+        var driver = new Driver(Today.AddYears(-15), licenseYears: 0);
+        var vehicle = new Vehicle(VehicleType.ElectricScooter, power: null);
+
+        var result = _policy.Evaluate(driver, vehicle, Today);
+
+        var (wasAccepted, capturedReason) = result.Match(
+            onAccepted: () => (true, (string?)null),
+            onRefused: r => (false, (string?)r));
+        Assert.False(wasAccepted);
+        Assert.Equal("Conducteur trop jeune pour ce véhicule", capturedReason);
+    }
+
+    [Fact]
     public void Evaluate_WhenElectricScooterDriverTurns16Tomorrow_ReturnsRefused()
     {
         var driver = new Driver(Today.AddYears(-16).AddDays(1), licenseYears: 0);
