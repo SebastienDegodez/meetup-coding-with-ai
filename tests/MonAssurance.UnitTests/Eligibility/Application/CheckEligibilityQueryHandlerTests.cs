@@ -17,7 +17,7 @@ public class CheckEligibilityQueryHandlerTests
     }
 
     [Fact]
-    public void Handle_WhenDriverIs18AndHasCar_ReturnsEligible()
+    public void Handle_WhenDriverIs18AndHasCar_ReturnsRefused()
     {
         var handler = BuildHandler(Today);
         var query = new CheckEligibilityQuery(
@@ -28,8 +28,8 @@ public class CheckEligibilityQueryHandlerTests
 
         var result = handler.Handle(query);
 
-        Assert.True(result.IsEligible);
-        Assert.Null(result.RejectionReason);
+        Assert.False(result.IsEligible);
+        Assert.Equal("Conducteur trop jeune pour ce véhicule", result.RejectionReason);
     }
 
     [Fact]
